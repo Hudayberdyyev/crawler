@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/Hudayberdyyev/crawler/repository/postgres"
 	"github.com/Hudayberdyyev/crawler/repository/storage"
+	"github.com/Hudayberdyyev/crawler/sources/rozetked"
 	"github.com/jackc/pgx"
 	"github.com/minio/minio-go/v7"
 	"log"
@@ -13,6 +15,7 @@ import (
 
 const (
 	ParsingInterval = 1 // on seconds
+	Rozetked = 2
 )
 
 func main() {
@@ -68,13 +71,10 @@ func RunParser(repo *repository.Repository, second int) {
 	ticker := time.NewTicker(time.Duration(second) * time.Second)
 
 	for _ = range ticker.C{
-		// ============================================================
-		// TurkmenPortal.ParseTurkmenPortal(repo, models.News{
-		//			CatID:  0,
-		//			AuthID: TurkmenPortalID,
-		//			Image:  "",
-		//		})
-		// ============================================================
-		fmt.Println("everything up to date !!!")
+		rozetked.StartParser(repo, models.News{
+			CatID: 0,
+			AuthID: Rozetked,
+			Image: "",
+		})
 	}
 }
