@@ -11,4 +11,5 @@ require (
 	github.com/minio/minio-go/v7 v7.0.12
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
+	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
 )
