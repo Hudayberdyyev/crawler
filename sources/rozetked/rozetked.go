@@ -301,6 +301,35 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			continue
 		}
 
+		s.Find("div.post_new__main_box_bottom-tags > a").Each(func(i int, tagSelection *goquery.Selection) {
+			tagText := strings.Trim(tagSelection.Text(), " \n\t\r")
+
+			// ====================================================================
+			//	get TagID
+			// ====================================================================
+			tagId, err := repo.Database.GetTagIdByName(tagText)
+			if err != nil {
+				log.Printf("error with get tag id by name: %v\n", err)
+			}
+
+			// ====================================================================
+			//	if there is no such tags then create a new and get ID
+			// ====================================================================
+			if tagId == 0 {
+				tagId, err = repo.Database.CreateTags(tagText, ru)
+				if err != nil {
+					log.Printf("error with create tag by name: %v\n", err)
+					return
+				}
+			}
+
+			_, err = repo.Database.CreateNewsTags(newsId, tagId)
+			if err != nil {
+				log.Printf("error with create news tags: %v\n", err)
+				return
+			}
+		})
+
 		// ====================================================================
 		// image article to storage
 		// ====================================================================
@@ -341,7 +370,7 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 	urlParts[0] = "https://rozetked.me/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
-		for indexPage := 1; ; indexPage++ {
+		for indexPage := 1; indexPage < 2; indexPage++ {
 			// ====================================================================
 			// make URL
 			// ====================================================================

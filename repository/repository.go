@@ -14,6 +14,10 @@ type Database interface {
 	CreateNewsText(newsText models.NewsText) (int, error)
 	CreateNewsContent(newsContent models.NewsContent) (int, error)
 	GetCategoryIdByName(categoryName string) (int, error)
+	GetTagIdByName(tagName string) (int, error)
+	CreateTags(tagName string, hl string) (int, error)
+	CreateTagsText(tagId int, tagName string, hl string) (int, error)
+	CreateNewsTags(newsId int, tagId int) (int, error)
 }
 
 type Storage interface {

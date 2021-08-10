@@ -12,6 +12,9 @@ const (
 	newsTable = "news"
 	newsTextTable = "news_text"
 	categoryTextTable = "categories_text"
+	tagsTextTable = "tags_text"
+	tagsTable = "tags"
+	newsTagsTable = "news_tags"
 )
 
 type NewsDatabase struct {
@@ -92,5 +95,52 @@ func (n *NewsDatabase) GetCategoryIdByName(categoryName string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	return id, nil
+}
+
+func (n *NewsDatabase) GetTagIdByName(tagName string) (int, error) {
+	var id int
+	query := fmt.Sprintf("select tag_id from %s where name=$1 limit 1", tagsTextTable)
+	err := n.db.QueryRow(query, tagName).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func (n *NewsDatabase) CreateTagsText(tagId int, tagName string, hl string) (int, error) {
+	var id int
+	query := fmt.Sprintf("insert into %s (name, tag_id, hl) values ($1, $2, $3) returning id", tagsTextTable)
+	err := n.db.QueryRow(query, tagName, tagId, hl).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func (n *NewsDatabase) CreateTags(tagName string, hl string) (int, error) {
+	var id int
+	query := fmt.Sprintf("insert into %s default values returning id", tagsTable)
+	err := n.db.QueryRow(query).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	_, err = n.CreateTagsText(id, tagName, hl)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func (n *NewsDatabase) CreateNewsTags(newsId int, tagId int) (int, error) {
+	var id int
+	query := fmt.Sprintf("insert into %s (news_id, tag_id) values ($1, $2) returning id", newsTagsTable)
+	err := n.db.QueryRow(query, newsId, tagId).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
 	return id, nil
 }
