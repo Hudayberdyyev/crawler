@@ -94,10 +94,8 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 		// check and add all possible images on tag to storage
 		// ====================================================================
 		text := strings.Trim(s.Text(), " \n\t\r")
-		if s.Nodes[0].Data == "div" {
-			fmt.Println(text, " ", len(text))
-		}
-		if len(text) == 0 {
+
+		if len(text) == 0 || s.Nodes[0].Data == "div" {
 			var imageLinks []string
 			s.Find("img").Each(func(i int, s *goquery.Selection) {
 				if attr, ok := s.Attr("src"); !ok {
@@ -253,7 +251,8 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		// publishDate
 		// ====================================================================
-		publishDateStr := s.Find("div.post_new-meta > div.post_new-meta-author > span").Text()
+		sel := s.Find("div.post_new-meta > div.post_new-meta-author").Children().Eq(0)
+		publishDateStr := strings.Trim(sel.Text(), " \n\t\r")
 
 		splitDate := strings.Split(publishDateStr, " ")
 
@@ -381,7 +380,7 @@ func getCategories(repo *repository.Repository) ([]Categories, error){
 	})
 
 	category = append(category, Categories{
-		link: "article",
+		link: "articles",
 		name: "Публикации",
 		id: 0,
 	})
