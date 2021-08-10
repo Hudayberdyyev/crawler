@@ -11,6 +11,7 @@ const (
 	newsContentTable = "news_content"
 	newsTable = "news"
 	newsTextTable = "news_text"
+	categoryTextTable = "categories_text"
 )
 
 type NewsDatabase struct {
@@ -84,3 +85,12 @@ func (n *NewsDatabase) CreateNewsContent(newsContent models.NewsContent) (int, e
 	return id, nil
 }
 
+func (n *NewsDatabase) GetCategoryIdByName(categoryName string) (int, error) {
+	var id int
+	query := fmt.Sprintf("select category_id from %s where title=$1 limit 1", categoryTextTable)
+	err := n.db.QueryRow(query, categoryName).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}

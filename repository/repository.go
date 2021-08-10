@@ -13,6 +13,7 @@ type Database interface {
 	CreateNews(newsInfo models.News) (int, error)
 	CreateNewsText(newsText models.NewsText) (int, error)
 	CreateNewsContent(newsContent models.NewsContent) (int, error)
+	GetCategoryIdByName(categoryName string) (int, error)
 }
 
 type Storage interface {
