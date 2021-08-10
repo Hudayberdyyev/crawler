@@ -1,7 +1,6 @@
 package rozetked
 
 import (
-	"context"
 	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
@@ -16,6 +15,7 @@ import (
 const (
 	categoryCount = 2
 	layoutDateTime = "15:04:05 02.01.2006 -07:00"
+	ru = ""
 )
 
 type Categories struct {
@@ -26,6 +26,170 @@ type Categories struct {
 
 var urlParts [2]string
 var cat []Categories
+
+func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
+	res, err := http.Get(newsText.Url)
+	if err != nil {
+		log.Printf("http get %s error: %v\n", newsText.Url, err)
+		return
+	}
+
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		log.Printf("status code error: %d %s\n", res.StatusCode, res.Status)
+		return
+	}
+
+	// ====================================================================
+	// load the HTML document
+	// ====================================================================
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		log.Printf("load html document error: %v\n", err)
+		return
+	}
+
+	// ====================================================================
+	// find title block and get title
+	// ====================================================================
+	block := doc.Find("div.home_left")
+
+	title := block.Find("h1").Text()
+
+	newsText.Title = title
+
+	// ====================================================================
+	// newsText to db
+	// ====================================================================
+	newsTextId, e := repo.CreateNewsText(newsText)
+
+	if e != nil {
+		log.Printf("error with create news text %v\n", e)
+		return
+	}
+
+	// ====================================================================
+	// find article text and iterate children tags
+	// ====================================================================
+	content := block.Find("div.n_main__content.content_ru")
+
+	content.Children().Each(func(i int, s *goquery.Selection) {
+		// ====================================================================
+		// get Tag value
+		// ====================================================================
+		tagValue, err := s.Html()
+		tagValue = strings.Trim(tagValue, " ")
+		if err != nil {
+			log.Printf("error get tag value: %v\n", err)
+			return
+		}
+		// ====================================================================
+		// if tag is empty then return
+		// ====================================================================
+		if len(tagValue) == 0 {
+			return
+		}
+		// ====================================================================
+		// if text of tag is empty then
+		// check and add all possible images on tag to storage
+		// ====================================================================
+		text := strings.Trim(s.Text(), " \n\t\r")
+		if s.Nodes[0].Data == "div" {
+			fmt.Println(text, " ", len(text))
+		}
+		if len(text) == 0 {
+			var imageLinks []string
+			s.Find("img").Each(func(i int, s *goquery.Selection) {
+				if attr, ok := s.Attr("src"); !ok {
+					return
+				} else {
+					// check for exists of picture
+					for _, v := range imageLinks {
+						if attr == v { return }
+					}
+					imageLinks = append(imageLinks, attr)
+
+					// make attribute
+					attr = strings.Trim(attr, " ")
+					attr = "https://rozetked.me" + attr
+
+					// make NewsContent
+					newsContent := models.NewsContent{
+						newsTextId,
+						"",
+						"img",
+						[]models.Attributes{
+							models.Attributes{
+								Key: "src",
+								Value: attr,
+							},
+						},
+					}
+
+					// NewsContent to db
+					_, contentErr := repo.CreateNewsContent(newsContent)
+					if contentErr != nil {
+						log.Printf("error with create news content: %v\n", contentErr)
+						return
+					}
+
+					// Image to storage on "content" bucket
+					//uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
+					//if uploadErr != nil {
+					//	log.Printf("error with upload image: %v\n", uploadErr)
+					//}
+				}
+			})
+			return
+		}
+
+		// ====================================================================
+		// remove all <img> tag-s on parent tag
+		// because there is text inside the tag
+		// ====================================================================
+		s.Find("img").Each(func(i int, img *goquery.Selection) {
+			img.Remove()
+		})
+
+		tagValue, err = s.Html()
+
+		if err != nil {
+			log.Printf("error get tag value: %v\n", err)
+			return
+		}
+		// ====================================================================
+		// make NewsContent
+		// analysis attributes of tags. because inside the <a> tag there can be an href attribute that refers to the link
+		// ====================================================================
+		newsContent := models.NewsContent{
+			newsTextId,
+			tagValue,
+			s.Nodes[0].Data,
+			[]models.Attributes{},
+		}
+
+		for _, v := range s.Nodes[0].Attr {
+			if v.Key == "href" {
+				newsContent.Attr = append(newsContent.Attr, models.Attributes{
+					Key:   v.Key,
+					Value: v.Val,
+				})
+			}
+		}
+
+		// ====================================================================
+		// newsContent to db
+		// ====================================================================
+		_, contentErr := repo.CreateNewsContent(newsContent)
+		if contentErr != nil {
+			log.Printf("error with create news content: %v\n", contentErr)
+			return
+		}
+
+	})
+
+	log.Printf("%s) %s parsed\n", newsText.Hl, newsText.Title)
+}
 
 func NewsPageParser(repo *repository.Repository, URL string, latestLink string, newsInfo models.News ) int {
 	// ====================================================================
@@ -141,10 +305,10 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		// image article to storage
 		// ====================================================================
-		uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
-		if uploadErr != nil {
-			log.Printf("error with upload image: %v\n", uploadErr)
-		}
+		//uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
+		//if uploadErr != nil {
+		//	log.Printf("error with upload image: %v\n", uploadErr)
+		//}
 
 		// ====================================================================
 		// add ids and links articles to slices
@@ -156,14 +320,14 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 	// ====================================================================
 	// iterate articles (tm, ru)
 	// ====================================================================
-	//for index, link := range result {
-	//	NewsContentParser(repo, models.NewsText{
-	//		NewsID: ids[index],
-	//		Hl:     ru,
-	//		Title:  "",
-	//		Url:    link,
-	//	})
-	//}
+	for index, link := range result {
+		NewsContentParser(repo, models.NewsText{
+			NewsID: ids[index],
+			Hl:     ru,
+			Title:  "",
+			Url:    link,
+		})
+	}
 
 	return http.StatusOK
 }
@@ -184,7 +348,7 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 			// ====================================================================
 			newsUrl := urlParts[0] + urlParts[1] + "?page=" + strconv.Itoa(indexPage)
 
-			newsId, err := repo.Database.GetLatestNewsIdByAuthorAndCategory(i+1, newsInfo.AuthID)
+			newsId, err := repo.Database.GetLatestNewsIdByAuthorAndCategory(cat[i].id, newsInfo.AuthID)
 			if err != nil {
 				log.Printf("error with get latest news id: %v", err)
 			}
