@@ -3,6 +3,7 @@ module github.com/Hudayberdyyev/crawler
 go 1.16
 
 require (
+	github.com/PuerkitoBio/goquery v1.7.1 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
