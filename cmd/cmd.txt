@@ -1,0 +1,3 @@
+docker run --name=test-db -e POSTGRES_PASSWORD='qwerty' -p 5432:5432 -d --rm postgres
+docker run -d --rm -p 9000:9000 -p 9001:9001 -e "MINIO_ROOT_USER=AHMET" -e "MINIO_ROOT_PASSWORD=Ah25101996!" -e "MINIO_ACCESS_KEY=AHMET" -e "MINIO_SECRET_KEY=BELETNEWS" minio/minio server /data --console-address ":9001"
+migrate -path repository/postgres/migrations -database 'postgres://postgres:qwerty@localhost:5432/postgres?sslmode=disable' up

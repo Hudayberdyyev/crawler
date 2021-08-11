@@ -1,6 +1,7 @@
 package rozetked
 
 import (
+	"context"
 	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
@@ -125,17 +126,17 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 					}
 
 					// NewsContent to db
-					_, contentErr := repo.CreateNewsContent(newsContent)
+					contentId, contentErr := repo.CreateNewsContent(newsContent)
 					if contentErr != nil {
 						log.Printf("error with create news content: %v\n", contentErr)
 						return
 					}
 
 					// Image to storage on "content" bucket
-					//uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
-					//if uploadErr != nil {
-					//	log.Printf("error with upload image: %v\n", uploadErr)
-					//}
+					uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
+					if uploadErr != nil {
+						log.Printf("error with upload image: %v\n", uploadErr)
+					}
 				}
 			})
 			return
@@ -333,10 +334,10 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		// image article to storage
 		// ====================================================================
-		//uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
-		//if uploadErr != nil {
-		//	log.Printf("error with upload image: %v\n", uploadErr)
-		//}
+		uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
+		if uploadErr != nil {
+			log.Printf("error with upload image: %v\n", uploadErr)
+		}
 
 		// ====================================================================
 		// add ids and links articles to slices
@@ -370,7 +371,7 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 	urlParts[0] = "https://rozetked.me/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
-		for indexPage := 1; indexPage < 2; indexPage++ {
+		for indexPage := 1; ; indexPage++ {
 			// ====================================================================
 			// make URL
 			// ====================================================================
