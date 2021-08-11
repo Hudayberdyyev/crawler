@@ -253,20 +253,21 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			continue
 		}
 
-		
-
 		// ====================================================================
 		// publishDate
 		// ====================================================================
-		metaSel := s.Find("div.post_new-meta > div.post_new-meta-author").Children().Eq(0)
+		metaSel := s.Find("div.postCard-content > div.postCard-meta > div.postCard-timestamp")
 		publishDateStr := strings.Trim(metaSel.Text(), " \n\t\r")
 
 		splitDate := strings.Split(publishDateStr, " ")
 
-		if cap(splitDate) == 2 {
-			splitPublishTime := splitDate[0]
-			splitPublishDate := splitDate[1]
-			splitPublishTime = splitPublishTime + ":00"
+		if len(splitDate[2]) <= 4 {
+			splitPublishTime := "00:00:00"
+			splitDate[1] = getMonthByRussianName(splitDate[1])
+			if splitDate[1] == "impossible" {
+				continue
+			}
+			splitPublishDate := splitDate[0]+"."+splitDate[1]+"."+splitDate[2]
 			publishDateStr = splitPublishTime + " " + splitPublishDate + " +03:00"
 		} else {
 			splitPublishTime := splitDate[0]
@@ -275,7 +276,17 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			var durationType string
 			if strings.Contains(timeType, "час") { durationType = "h" } else {
 				if strings.Contains(timeType, "мин") { durationType = "m" } else {
-					if strings.Contains(timeType, "сек") { durationType = "s" }
+					if strings.Contains(timeType, "сек") { durationType = "s" } else {
+						if strings.Contains(timeType, "дн") || strings.Contains(timeType, "ден") {
+							cntDays, daysErr := strconv.Atoi(splitPublishTime)
+							if daysErr != nil {
+								log.Printf("error with calc duration: %v\n", daysErr)
+								continue
+							}
+							splitPublishTime = strconv.Itoa(cntDays * 24)
+							durationType = "h"
+						}
+					}
 				}
 			}
 			postDuration, err := time.ParseDuration("-" + splitPublishTime + durationType)
@@ -365,6 +376,22 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 	}
 
 	return http.StatusOK
+}
+
+func getMonthByRussianName(s string) string {
+	if strings.Contains(s, "январ") { return "01" }
+	if strings.Contains(s, "феврал") { return "02" }
+	if strings.Contains(s, "март") { return "03" }
+	if strings.Contains(s, "апрел") { return "04" }
+	if strings.Contains(s, "мая") { return "05" }
+	if strings.Contains(s, "июн") { return "06" }
+	if strings.Contains(s, "июл") { return "07" }
+	if strings.Contains(s, "август") { return "08" }
+	if strings.Contains(s, "сентя") { return "09" }
+	if strings.Contains(s, "октя") { return "10" }
+	if strings.Contains(s, "ноя") { return "11" }
+	if strings.Contains(s, "дека") { return "12" }
+	return "impossible"
 }
 
 func StartParser(repo *repository.Repository, newsInfo models.News) {
