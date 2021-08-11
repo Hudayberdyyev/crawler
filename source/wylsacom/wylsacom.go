@@ -319,7 +319,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			continue
 		}
 
-		s.Find("div.post_new__main_box_bottom-tags > a").Each(func(i int, tagSelection *goquery.Selection) {
+		s.Find("div.postCard-meta > div.postCard-tag > object > a").Each(func(i int, tagSelection *goquery.Selection) {
 			tagText := strings.Trim(tagSelection.Text(), " \n\t\r")
 
 			// ====================================================================
@@ -330,9 +330,9 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 				log.Printf("error with get tag id by name: %v\n", err)
 			}
 
-			// ====================================================================
-			//	if there is no such tags then create a new and get ID
-			// ====================================================================
+			//// ====================================================================
+			////	if there is no such tags then create a new and get ID
+			//// ====================================================================
 			if tagId == 0 {
 				tagId, err = repo.Database.CreateTags(tagText, ru)
 				if err != nil {
@@ -351,10 +351,10 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		// image article to storage
 		// ====================================================================
-		uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
-		if uploadErr != nil {
-			log.Printf("error with upload image: %v\n", uploadErr)
-		}
+		//uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
+		//if uploadErr != nil {
+		//	log.Printf("error with upload image: %v\n", uploadErr)
+		//}
 
 		// ====================================================================
 		// add ids and links articles to slices
