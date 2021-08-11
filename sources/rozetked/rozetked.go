@@ -251,8 +251,8 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		// publishDate
 		// ====================================================================
-		sel := s.Find("div.post_new-meta > div.post_new-meta-author").Children().Eq(0)
-		publishDateStr := strings.Trim(sel.Text(), " \n\t\r")
+		metaSel := s.Find("div.post_new-meta > div.post_new-meta-author").Children().Eq(0)
+		publishDateStr := strings.Trim(metaSel.Text(), " \n\t\r")
 
 		splitDate := strings.Split(publishDateStr, " ")
 
@@ -271,11 +271,11 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 					if strings.Contains(timeType, "сек") { durationType = "s" }
 				}
 			}
-			duration1, err := time.ParseDuration("-" + splitPublishTime + durationType)
+			postDuration, err := time.ParseDuration("-" + splitPublishTime + durationType)
 			if err != nil {
 				log.Printf("error with parse duration %s: %v\n", splitPublishTime, err)
 			}
-			publishDateStr = time.Now().Add(duration1).Format(layoutDateTime)
+			publishDateStr = time.Now().Add(postDuration).Format(layoutDateTime)
 		}
 
 		publishDate, err := time.Parse(layoutDateTime, publishDateStr)
