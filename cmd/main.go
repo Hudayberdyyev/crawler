@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/Hudayberdyyev/crawler/repository/postgres"
 	"github.com/Hudayberdyyev/crawler/repository/storage"
+	"github.com/Hudayberdyyev/crawler/source/sourcedir"
 	"github.com/jackc/pgx"
 	"github.com/minio/minio-go/v7"
 	"log"
@@ -69,7 +71,11 @@ func RunParser(repo *repository.Repository, second int) {
 
 	for _ = range ticker.C{
 		// ============================================================
-
+		sourcedir.StartParser(repo, models.News{
+			CatID: 0,
+			AuthID: 1,
+			Image: "",
+		})
 		// ============================================================
 		fmt.Println("everything up to date !!!")
 	}
