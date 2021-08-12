@@ -46,14 +46,32 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 	var ids []int
 
 	fmt.Println(URL)
-	sel := doc.Find("div.page-content > div.page-main > div.news._all > div.news-items").Children().Filter("div.news-item")
+	sel := doc.Find("div.page-content > div.page-main > div.news._all > div.news-items").Children()
 	for i := range sel.Nodes {
 		s := sel.Eq(i)
 		// ====================================================================
-		// article parse
+		// if tag is date then get date
 		// ====================================================================
-		fmt.Println(s.Nodes[0].Data)
+		var postDate string
+		if s.Nodes[0].Attr[0].Val == "news-items__head" {
+			splitPostDate := strings.Split(strings.Trim(s.Text(), " \n\t\r"), " ")
+			if cap(splitPostDate) != 3 {
+				log.Println("error date format: ", splitPostDate)
+				continue
+			}
+			postDay, postMonth, postYear := splitPostDate[0], getMonthByRussianName(strings.ToLower(splitPostDate[1])), splitPostDate[2]
+			if postMonth == "impossible" {
+				log.Printf("impossible month name: %s\n", strings.ToLower(splitPostDate[1]))
+				continue
+			}
+
+			postDate = postDay + "." + postMonth + "." + postYear
+			fmt.Println(postDate)
+			continue
+		}
+
 		continue
+
 		// ====================================================================
 		// image
 		// ====================================================================
@@ -189,4 +207,20 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 	}
 
 	return http.StatusOK
+}
+
+func getMonthByRussianName(s string) string {
+	if strings.Contains(s, "январ") { return "01" }
+	if strings.Contains(s, "феврал") { return "02" }
+	if strings.Contains(s, "март") { return "03" }
+	if strings.Contains(s, "апрел") { return "04" }
+	if strings.Contains(s, "мая") { return "05" }
+	if strings.Contains(s, "июн") { return "06" }
+	if strings.Contains(s, "июл") { return "07" }
+	if strings.Contains(s, "август") { return "08" }
+	if strings.Contains(s, "сентя") { return "09" }
+	if strings.Contains(s, "октя") { return "10" }
+	if strings.Contains(s, "ноя") { return "11" }
+	if strings.Contains(s, "дека") { return "12" }
+	return "impossible"
 }
