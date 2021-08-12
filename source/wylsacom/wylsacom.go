@@ -1,6 +1,7 @@
 package wylsacom
 
 import (
+	"context"
 	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
@@ -130,17 +131,17 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 					}
 
 					// NewsContent to db
-					_, contentErr := repo.CreateNewsContent(newsContent)
+					contentId, contentErr := repo.CreateNewsContent(newsContent)
 					if contentErr != nil {
 						log.Printf("error with create news content: %v\n", contentErr)
 						return
 					}
 
 					// Image to storage on "content" bucket
-					//uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
-					//if uploadErr != nil {
-					//	log.Printf("error with upload image: %v\n", uploadErr)
-					//}
+					uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
+					if uploadErr != nil {
+						log.Printf("error with upload image: %v\n", uploadErr)
+					}
 				}
 			})
 			return
@@ -355,10 +356,10 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		// image article to storage
 		// ====================================================================
-		//uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
-		//if uploadErr != nil {
-		//	log.Printf("error with upload image: %v\n", uploadErr)
-		//}
+		uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
+		if uploadErr != nil {
+			log.Printf("error with upload image: %v\n", uploadErr)
+		}
 
 		// ====================================================================
 		// add ids and links articles to slices
@@ -382,22 +383,6 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 	return http.StatusOK
 }
 
-func getMonthByRussianName(s string) string {
-	if strings.Contains(s, "январ") { return "01" }
-	if strings.Contains(s, "феврал") { return "02" }
-	if strings.Contains(s, "март") { return "03" }
-	if strings.Contains(s, "апрел") { return "04" }
-	if strings.Contains(s, "мая") { return "05" }
-	if strings.Contains(s, "июн") { return "06" }
-	if strings.Contains(s, "июл") { return "07" }
-	if strings.Contains(s, "август") { return "08" }
-	if strings.Contains(s, "сентя") { return "09" }
-	if strings.Contains(s, "октя") { return "10" }
-	if strings.Contains(s, "ноя") { return "11" }
-	if strings.Contains(s, "дека") { return "12" }
-	return "impossible"
-}
-
 func StartParser(repo *repository.Repository, newsInfo models.News) {
 	cat, err := getCategories(repo)
 	if err != nil {
@@ -408,7 +393,7 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 	urlParts[0] = "https://wylsa.com/category/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
-		for indexPage := 1; indexPage < 2; indexPage++ {
+		for indexPage := 1; ; indexPage++ {
 			// ====================================================================
 			// make URL
 			// ====================================================================
@@ -435,6 +420,22 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 			}
 		}
 	}
+}
+
+func getMonthByRussianName(s string) string {
+	if strings.Contains(s, "январ") { return "01" }
+	if strings.Contains(s, "феврал") { return "02" }
+	if strings.Contains(s, "март") { return "03" }
+	if strings.Contains(s, "апрел") { return "04" }
+	if strings.Contains(s, "мая") { return "05" }
+	if strings.Contains(s, "июн") { return "06" }
+	if strings.Contains(s, "июл") { return "07" }
+	if strings.Contains(s, "август") { return "08" }
+	if strings.Contains(s, "сентя") { return "09" }
+	if strings.Contains(s, "октя") { return "10" }
+	if strings.Contains(s, "ноя") { return "11" }
+	if strings.Contains(s, "дека") { return "12" }
+	return "impossible"
 }
 
 func getCategories(repo *repository.Repository) ([]Categories, error){
