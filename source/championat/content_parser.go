@@ -1,4 +1,4 @@
-package sourcedir
+package championat
 
 import (
 	"context"

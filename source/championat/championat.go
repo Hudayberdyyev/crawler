@@ -1,4 +1,4 @@
-package sourcedir
+package championat
 
 import (
 	"github.com/Hudayberdyyev/crawler/models"
