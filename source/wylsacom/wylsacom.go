@@ -1,7 +1,6 @@
 package wylsacom
 
 import (
-	"context"
 	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
@@ -53,16 +52,16 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	// ====================================================================
 	// find title block and get title
 	// ====================================================================
-	block := doc.Find("div.home_left")
+	block := doc.Find("main#main > article")
 
-	title := block.Find("h1").Text()
+	title := block.Find("section.headline > h1").Text()
 
 	newsText.Title = title
 
 	// ====================================================================
 	// newsText to db
 	// ====================================================================
-	newsTextId, e := repo.CreateNewsText(newsText)
+	newsTextId, e := repo.Database.CreateNewsText(newsText)
 
 	if e != nil {
 		log.Printf("error with create news text %v\n", e)
@@ -72,7 +71,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	// ====================================================================
 	// find article text and iterate children tags
 	// ====================================================================
-	content := block.Find("div.n_main__content.content_ru")
+	content := block.Find("section.content > div.content__inner")
 
 	content.Children().Each(func(i int, s *goquery.Selection) {
 		// ====================================================================
@@ -91,12 +90,18 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 			return
 		}
 		// ====================================================================
+		// skip of links another posts
+		// ====================================================================
+		if s.Nodes[0].Data == "a" && s.Nodes[0].Attr[0].Val  == "embeded-post" {
+			return
+		}
+		// ====================================================================
 		// if text of tag is empty then
 		// check and add all possible images on tag to storage
 		// ====================================================================
 		text := strings.Trim(s.Text(), " \n\t\r")
 
-		if len(text) == 0 || s.Nodes[0].Data == "div" {
+		if len(text) == 0 || s.Nodes[0].Data == "div" || s.Nodes[0].Data == "figure" {
 			var imageLinks []string
 			s.Find("img").Each(func(i int, s *goquery.Selection) {
 				if attr, ok := s.Attr("src"); !ok {
@@ -110,7 +115,6 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 
 					// make attribute
 					attr = strings.Trim(attr, " ")
-					attr = "https://rozetked.me" + attr
 
 					// make NewsContent
 					newsContent := models.NewsContent{
@@ -126,17 +130,17 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 					}
 
 					// NewsContent to db
-					contentId, contentErr := repo.CreateNewsContent(newsContent)
+					_, contentErr := repo.CreateNewsContent(newsContent)
 					if contentErr != nil {
 						log.Printf("error with create news content: %v\n", contentErr)
 						return
 					}
 
 					// Image to storage on "content" bucket
-					uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
-					if uploadErr != nil {
-						log.Printf("error with upload image: %v\n", uploadErr)
-					}
+					//uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
+					//if uploadErr != nil {
+					//	log.Printf("error with upload image: %v\n", uploadErr)
+					//}
 				}
 			})
 			return
@@ -313,7 +317,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		//	article to db
 		// ====================================================================
-		newsId, e := repo.CreateNews(newsInfo)
+		newsId, e := repo.Database.CreateNews(newsInfo)
 		if e != nil {
 			log.Printf("Error with create news: %v\n", e)
 			continue
@@ -404,7 +408,7 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 	urlParts[0] = "https://wylsa.com/category/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
-		for indexPage := 1; ; indexPage++ {
+		for indexPage := 1; indexPage < 2; indexPage++ {
 			// ====================================================================
 			// make URL
 			// ====================================================================
