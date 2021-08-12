@@ -6,7 +6,7 @@ import (
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/Hudayberdyyev/crawler/repository/postgres"
 	"github.com/Hudayberdyyev/crawler/repository/storage"
-	"github.com/Hudayberdyyev/crawler/source/sourcedir"
+	"github.com/Hudayberdyyev/crawler/source/TurkmenPortal"
 	"github.com/jackc/pgx"
 	"github.com/minio/minio-go/v7"
 	"log"
@@ -15,6 +15,7 @@ import (
 
 const (
 	ParsingInterval = 1 // on seconds
+	TurkmenPortalID = 1
 )
 
 func main() {
@@ -71,9 +72,9 @@ func RunParser(repo *repository.Repository, second int) {
 
 	for _ = range ticker.C{
 		// ============================================================
-		sourcedir.StartParser(repo, models.News{
+		TurkmenPortal.ParseTurkmenPortal(repo, models.News{
 			CatID: 0,
-			AuthID: 1,
+			AuthID: TurkmenPortalID,
 			Image: "",
 		})
 		// ============================================================

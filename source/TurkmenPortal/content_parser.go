@@ -1,4 +1,4 @@
-package sourcedir
+package TurkmenPortal
 
 import (
 	"context"
@@ -12,9 +12,25 @@ import (
 )
 
 func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
-	res, err := http.Get(newsText.Url)
+	// ====================================================================
+	// collect URL
+	// ====================================================================
+	URL := newsText.Url
+
+	hl := ""
+	if newsText.Hl == tm {
+		hl = tm +"/"
+	}
+
+	URL = URL[:26] + hl + URL[26:]
+	newsText.Url = URL
+
+	// ====================================================================
+	// http get URL
+	// ====================================================================
+	res, err := http.Get(URL)
 	if err != nil {
-		log.Printf("http get %s error: %v\n", newsText.Url, err)
+		log.Printf("http get %s error: %v\n", URL, err)
 		return
 	}
 
@@ -36,7 +52,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	// ====================================================================
 	// find title block and get title
 	// ====================================================================
-	block := doc.Find("div.home_left")
+	block := doc.Find(".col-sm-9.border-left.level2_cont_right")
 
 	title := block.Find("h1").Text()
 
@@ -55,7 +71,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	// ====================================================================
 	// find article text and iterate children tags
 	// ====================================================================
-	content := block.Find("div.n_main__content.content_ru")
+	content := block.Find("div.article_text")
 
 	content.Children().Each(func(i int, s *goquery.Selection) {
 		// ====================================================================
@@ -77,25 +93,14 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 		// if text of tag is empty then
 		// check and add all possible images on tag to storage
 		// ====================================================================
-		text := strings.Trim(s.Text(), " \n\t\r")
-
-		if len(text) == 0 || s.Nodes[0].Data == "div" {
-			var imageLinks []string
+		if len(s.Text()) == 0 {
 			s.Find("img").Each(func(i int, s *goquery.Selection) {
 				if attr, ok := s.Attr("src"); !ok {
 					return
 				} else {
-					// check for exists of picture
-					for _, v := range imageLinks {
-						if attr == v {
-							return
-						}
-					}
-					imageLinks = append(imageLinks, attr)
-
 					// make attribute
 					attr = strings.Trim(attr, " ")
-					attr = "https://rozetked.me" + attr
+					attr = "https://turkmenportal.com" + attr
 
 					// make NewsContent
 					newsContent := models.NewsContent{
@@ -104,7 +109,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 						"img",
 						[]models.Attributes{
 							models.Attributes{
-								Key:   "src",
+								Key: "src",
 								Value: attr,
 							},
 						},
@@ -124,6 +129,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 					}
 				}
 			})
+
 			return
 		}
 
