@@ -18,6 +18,7 @@ type Database interface {
 	CreateTagsText(tagId int, tagName string, hl string) (int, error)
 	CreateTags(tagName string, hl string) (int, error)
 	CreateNewsTags(newsId int, tagId int) (int, error)
+	UpdateNewsImageById(newsId int, imageLink string) (error)
 }
 
 type Storage interface {

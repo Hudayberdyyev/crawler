@@ -144,3 +144,20 @@ func (n *NewsDatabase) CreateNewsTags(newsId int, tagId int) (int, error) {
 
 	return id, nil
 }
+
+func (n *NewsDatabase) UpdateNewsImageById(newsId int, imageLink string) (error) {
+	tx, err := n.db.Begin()
+	if err != nil {
+
+		return err
+	}
+	defer tx.Rollback()
+	query := fmt.Sprintf("update %s set image = $1 where id = $2", newsTable)
+	_, err = tx.Exec(query, imageLink, newsId)
+	if err != nil {
+		return err
+	}
+	err = tx.Commit()
+	if err != nil { return err }
+	return nil
+}

@@ -114,7 +114,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			// ====================================================================
 			//	article to db
 			// ====================================================================
-			newsId, e := repo.CreateNews(newsInfo)
+			newsId, e := repo.Database.CreateNews(newsInfo)
 			if e != nil {
 				log.Printf("Error with create news: %v\n", e)
 				continue
@@ -152,7 +152,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			// ====================================================================
 			// image article to storage
 			// ====================================================================
-			//uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
+			//uploadErr := repo.Storage.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
 			//if uploadErr != nil {
 			//	log.Printf("error with upload image: %v\n", uploadErr)
 			//}
@@ -168,14 +168,14 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 	// ====================================================================
 	// iterate articles (tm, ru)
 	// ====================================================================
-	//for index, link := range result {
-	//	NewsContentParser(repo, models.NewsText{
-	//		NewsID: ids[index],
-	//		Hl:     ru,
-	//		Title:  "",
-	//		Url:    link,
-	//	})
-	//}
+	for index, link := range result {
+		NewsContentParser(repo, models.NewsText{
+			NewsID: ids[index],
+			Hl:     ru,
+			Title:  "",
+			Url:    link,
+		})
+	}
 
 	return http.StatusOK
 }
