@@ -1,14 +1,12 @@
 package championat
 
 import (
-	"context"
 	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/PuerkitoBio/goquery"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -122,7 +120,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 				continue
 			}
 
-			s.Find("div.post_new__main_box_bottom-tags > a").Each(func(i int, tagSelection *goquery.Selection) {
+			s.Find("div.news-item__content > a.news-item__tag ").Each(func(i int, tagSelection *goquery.Selection) {
 				tagText := strings.Trim(tagSelection.Text(), " \n\t\r")
 
 				// ====================================================================
@@ -154,10 +152,10 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			// ====================================================================
 			// image article to storage
 			// ====================================================================
-			uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
-			if uploadErr != nil {
-				log.Printf("error with upload image: %v\n", uploadErr)
-			}
+			//uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
+			//if uploadErr != nil {
+			//	log.Printf("error with upload image: %v\n", uploadErr)
+			//}
 
 			// ====================================================================
 			// add ids and links articles to slices
@@ -170,14 +168,14 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 	// ====================================================================
 	// iterate articles (tm, ru)
 	// ====================================================================
-	for index, link := range result {
-		NewsContentParser(repo, models.NewsText{
-			NewsID: ids[index],
-			Hl:     ru,
-			Title:  "",
-			Url:    link,
-		})
-	}
+	//for index, link := range result {
+	//	NewsContentParser(repo, models.NewsText{
+	//		NewsID: ids[index],
+	//		Hl:     ru,
+	//		Title:  "",
+	//		Url:    link,
+	//	})
+	//}
 
 	return http.StatusOK
 }
