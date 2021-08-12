@@ -17,6 +17,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 	// ====================================================================
 	// http get URL
 	// ====================================================================
+	fmt.Println(URL)
 	res, err := http.Get(URL)
 
 	if err != nil {
