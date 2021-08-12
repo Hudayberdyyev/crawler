@@ -69,11 +69,7 @@ func RunParser(repo *repository.Repository, second int) {
 
 	for _ = range ticker.C{
 		// ============================================================
-		// TurkmenPortal.ParseTurkmenPortal(repo, models.News{
-		//			CatID:  0,
-		//			AuthID: TurkmenPortalID,
-		//			Image:  "",
-		//		})
+
 		// ============================================================
 		fmt.Println("everything up to date !!!")
 	}
