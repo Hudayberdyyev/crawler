@@ -46,13 +46,14 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 	var ids []int
 
 	fmt.Println(URL)
-	sel := doc.Find("div#app > div.container.r > div.r_content > div.home > div.home_left > div.home_left__posts").Children().Filter("div.post_new")
+	sel := doc.Find("div.page-content > div.page-main > div.news._all > div.news-items").Children().Filter("div.news-item")
 	for i := range sel.Nodes {
 		s := sel.Eq(i)
 		// ====================================================================
 		// article parse
 		// ====================================================================
-
+		fmt.Println(s.Nodes[0].Data)
+		continue
 		// ====================================================================
 		// image
 		// ====================================================================

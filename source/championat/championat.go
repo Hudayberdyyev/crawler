@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	categoryCount  = 2
+	categoryCount  = 1
 	layoutDateTime = "15:04:05 02.01.2006 -07:00"
 	ru             = ""
 )
@@ -30,14 +30,14 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 		return
 	}
 
-	urlParts[0] = "https://rozetked.me/"
+	urlParts[0] = "https://championat.com/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
-		for indexPage := 1; ; indexPage++ {
+		for indexPage := 1; indexPage < 2; indexPage++ {
 			// ====================================================================
 			// make URL
 			// ====================================================================
-			newsUrl := urlParts[0] + urlParts[1] + "?page=" + strconv.Itoa(indexPage)
+			newsUrl := urlParts[0] + urlParts[1] + "/" + strconv.Itoa(indexPage) + ".html"
 
 			newsId, err := repo.Database.GetLatestNewsIdByAuthorAndCategory(cat[i].id, newsInfo.AuthID)
 			if err != nil {
@@ -67,13 +67,7 @@ func getCategories(repo *repository.Repository) ([]Categories, error) {
 
 	category = append(category, Categories{
 		link: "news",
-		name: "Технология",
-		id:   0,
-	})
-
-	category = append(category, Categories{
-		link: "articles",
-		name: "Публикации",
+		name: "Спорт",
 		id:   0,
 	})
 
