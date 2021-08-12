@@ -94,38 +94,10 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			// ====================================================================
 			// publishDate
 			// ====================================================================
-			metaSel := s.Find("div.post_new-meta > div.post_new-meta-author").Children().Eq(0)
-			publishDateStr := strings.Trim(metaSel.Text(), " \n\t\r")
+			metaSel := s.Find("div.news-item__time")
+			publishTimeStr := strings.Trim(metaSel.Text(), " \n\t\r") + ":00"
 
-			splitDate := strings.Split(publishDateStr, " ")
-
-			if cap(splitDate) == 2 {
-				splitPublishTime := splitDate[0]
-				splitPublishDate := splitDate[1]
-				splitPublishTime = splitPublishTime + ":00"
-				publishDateStr = splitPublishTime + " " + splitPublishDate + " +03:00"
-			} else {
-				splitPublishTime := splitDate[0]
-				timeType := splitDate[1]
-
-				var durationType string
-				if strings.Contains(timeType, "час") {
-					durationType = "h"
-				} else {
-					if strings.Contains(timeType, "мин") {
-						durationType = "m"
-					} else {
-						if strings.Contains(timeType, "сек") {
-							durationType = "s"
-						}
-					}
-				}
-				postDuration, err := time.ParseDuration("-" + splitPublishTime + durationType)
-				if err != nil {
-					log.Printf("error with parse duration %s: %v\n", splitPublishTime, err)
-				}
-				publishDateStr = time.Now().Add(postDuration).Format(layoutDateTime)
-			}
+			publishDateStr := publishTimeStr + " " + postDate + " +03:00"
 
 			publishDate, err := time.Parse(layoutDateTime, publishDateStr)
 			if err != nil {
