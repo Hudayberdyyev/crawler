@@ -1,12 +1,14 @@
 package championat
 
 import (
+	"context"
 	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/PuerkitoBio/goquery"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -152,10 +154,10 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			// ====================================================================
 			// image article to storage
 			// ====================================================================
-			//uploadErr := repo.Storage.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
-			//if uploadErr != nil {
-			//	log.Printf("error with upload image: %v\n", uploadErr)
-			//}
+			uploadErr := repo.Storage.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
+			if uploadErr != nil {
+				log.Printf("error with upload image: %v\n", uploadErr)
+			}
 
 			// ====================================================================
 			// add ids and links articles to slices

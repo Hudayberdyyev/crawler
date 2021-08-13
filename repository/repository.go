@@ -23,6 +23,7 @@ type Database interface {
 
 type Storage interface {
 	UploadImage(ctx context.Context,bucketName string, filePath string, objectName string) error
+	RemoveImage(ctx context.Context,bucketName string, objectName string) error
 }
 
 type Repository struct {
