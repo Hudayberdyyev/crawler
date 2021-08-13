@@ -1,4 +1,4 @@
-package sourcedir
+package ixbt
 
 import (
 	"github.com/Hudayberdyyev/crawler/models"
