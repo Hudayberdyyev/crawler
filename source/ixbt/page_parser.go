@@ -1,14 +1,12 @@
 package ixbt
 
 import (
-	"context"
 	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/PuerkitoBio/goquery"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -56,7 +54,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		// image default
 		// ====================================================================
-		newsInfo.Image = "https://ixbt.com" + "/pic/digit21.png"
+		newsInfo.Image = ""
 
 		// ====================================================================
 		// link
@@ -94,48 +92,20 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		//	article to db
 		// ====================================================================
-		newsId, e := repo.CreateNews(newsInfo)
-		if e != nil {
-			log.Printf("Error with create news: %v\n", e)
-			continue
-		}
-
-		s.Find("div.post_new__main_box_bottom-tags > a").Each(func(i int, tagSelection *goquery.Selection) {
-			tagText := strings.Trim(tagSelection.Text(), " \n\t\r")
-
-			// ====================================================================
-			//	get TagID
-			// ====================================================================
-			tagId, err := repo.Database.GetTagIdByName(tagText)
-			if err != nil {
-				log.Printf("error with get tag id by name: %v\n", err)
-			}
-
-			// ====================================================================
-			//	if there is no such tags then create a new and get ID
-			// ====================================================================
-			if tagId == 0 {
-				tagId, err = repo.Database.CreateTags(tagText, ru)
-				if err != nil {
-					log.Printf("error with create tag by name: %v\n", err)
-					return
-				}
-			}
-
-			_, err = repo.Database.CreateNewsTags(newsId, tagId)
-			if err != nil {
-				log.Printf("error with create news tags: %v\n", err)
-				return
-			}
-		})
+		//newsId, e := repo.Database.CreateNews(newsInfo)
+		//if e != nil {
+		//	log.Printf("Error with create news: %v\n", e)
+		//	continue
+		//}
+		newsId := 1;
 
 		// ====================================================================
 		// image article to storage
 		// ====================================================================
-		uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
-		if uploadErr != nil {
-			log.Printf("error with upload image: %v\n", uploadErr)
-		}
+		//uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
+		//if uploadErr != nil {
+		//	log.Printf("error with upload image: %v\n", uploadErr)
+		//}
 
 		// ====================================================================
 		// add ids and links articles to slices

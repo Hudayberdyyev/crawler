@@ -2,6 +2,7 @@ package ixbt
 
 import (
 	"context"
+	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/PuerkitoBio/goquery"
@@ -36,11 +37,13 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	// ====================================================================
 	// find title block and get title
 	// ====================================================================
-	block := doc.Find("div.home_left")
+	block := doc.Find("div.b-article")
 
-	title := block.Find("h1").Text()
+	title := block.Find("div.b-article__header > h1").Text()
 
 	newsText.Title = title
+	fmt.Println(newsText.Title)
+	return
 
 	// ====================================================================
 	// newsText to db
