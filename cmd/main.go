@@ -6,6 +6,7 @@ import (
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/Hudayberdyyev/crawler/repository/postgres"
 	"github.com/Hudayberdyyev/crawler/repository/storage"
+	"github.com/Hudayberdyyev/crawler/source/TurkmenPortal"
 	"github.com/Hudayberdyyev/crawler/source/rozetked"
 	"github.com/Hudayberdyyev/crawler/source/wylsacom"
 	"github.com/jackc/pgx"
@@ -16,6 +17,7 @@ import (
 
 const (
 	ParsingInterval = 1 // on seconds
+	TurkmenPortalID = 1
 	Rozetked = 2
 	Wylsacom = 3
 )
@@ -73,15 +75,25 @@ func RunParser(repo *repository.Repository, second int) {
 	ticker := time.NewTicker(time.Duration(second) * time.Second)
 
 	for _ = range ticker.C{
+		// ============================================================
 		rozetked.StartParser(repo, models.News{
 			CatID:  0,
 			AuthID: Rozetked,
 			Image:  "",
 		})
+		// ============================================================
 		wylsacom.StartParser(repo, models.News{
 			CatID: 0,
 			AuthID: Wylsacom,
 			Image: "",
 		})
+		// ============================================================
+		TurkmenPortal.ParseTurkmenPortal(repo, models.News{
+			CatID: 0,
+			AuthID: TurkmenPortalID,
+			Image: "",
+		})
+		// ============================================================
+		fmt.Println("everything up to date !!!")
 	}
 }
