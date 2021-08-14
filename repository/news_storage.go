@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"github.com/minio/minio-go/v7"
 	"io"
 	"log"
@@ -25,7 +24,7 @@ func (n *NewsStorage) UploadImage(ctx context.Context,bucketName string, filePat
 		// Check to see if we already own this bucket (which happens if you run this twice)
 		exists, errBucketExists := n.minioClient.BucketExists(ctx, bucketName)
 		if errBucketExists == nil && exists {
-			log.Printf("We already own %s\n", bucketName)
+			// log.Printf("We already own %s\n", bucketName)
 		} else {
 			return err
 		}
@@ -41,7 +40,7 @@ func (n *NewsStorage) UploadImage(ctx context.Context,bucketName string, filePat
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Successfully uploaded bytes: %s\n", filePath)
+	// fmt.Printf("Successfully uploaded bytes: %s\n", filePath)
 
 	return nil
 }
@@ -51,7 +50,7 @@ func (n *NewsStorage) RemoveImage(ctx context.Context,bucketName string, objectN
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Successfully removed object: %s\n", objectName)
+	// fmt.Printf("Successfully removed object: %s\n", objectName)
 	return nil
 }
 

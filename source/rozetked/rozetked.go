@@ -62,7 +62,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	// ====================================================================
 	// newsText to db
 	// ====================================================================
-	newsTextId, e := repo.CreateNewsText(newsText)
+	newsTextId, e := repo.Database.CreateNewsText(newsText)
 
 	if e != nil {
 		log.Printf("error with create news text %v\n", e)
@@ -126,14 +126,14 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 					}
 
 					// NewsContent to db
-					contentId, contentErr := repo.CreateNewsContent(newsContent)
+					contentId, contentErr := repo.Database.CreateNewsContent(newsContent)
 					if contentErr != nil {
 						log.Printf("error with create news content: %v\n", contentErr)
 						return
 					}
 
 					// Image to storage on "content" bucket
-					uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
+					uploadErr := repo.Storage.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
 					if uploadErr != nil {
 						log.Printf("error with upload image: %v\n", uploadErr)
 					}
@@ -179,7 +179,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 		// ====================================================================
 		// newsContent to db
 		// ====================================================================
-		_, contentErr := repo.CreateNewsContent(newsContent)
+		_, contentErr := repo.Database.CreateNewsContent(newsContent)
 		if contentErr != nil {
 			log.Printf("error with create news content: %v\n", contentErr)
 			return
@@ -238,7 +238,11 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			log.Printf("No news images\n")
 			continue
 		}
-		newsInfo.Image="https://rozetked.me" + imageLink
+		if strings.Contains(imageLink, "https") {
+			newsInfo.Image = imageLink
+		} else {
+			newsInfo.Image = "https://rozetked.me" + imageLink
+		}
 
 		// ====================================================================
 		// link
@@ -296,7 +300,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		//	article to db
 		// ====================================================================
-		newsId, e := repo.CreateNews(newsInfo)
+		newsId, e := repo.Database.CreateNews(newsInfo)
 		if e != nil {
 			log.Printf("Error with create news: %v\n", e)
 			continue
@@ -334,7 +338,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		// image article to storage
 		// ====================================================================
-		uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
+		uploadErr := repo.Storage.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
 		if uploadErr != nil {
 			log.Printf("error with upload image: %v\n", uploadErr)
 		}
