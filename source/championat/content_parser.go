@@ -1,7 +1,8 @@
-package TurkmenPortal
+package championat
 
 import (
 	"context"
+	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/PuerkitoBio/goquery"
@@ -12,25 +13,9 @@ import (
 )
 
 func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
-	// ====================================================================
-	// collect URL
-	// ====================================================================
-	URL := newsText.Url
-
-	hl := ""
-	if newsText.Hl == tm {
-		hl = tm +"/"
-	}
-
-	URL = URL[:26] + hl + URL[26:]
-	newsText.Url = URL
-
-	// ====================================================================
-	// http get URL
-	// ====================================================================
-	res, err := http.Get(URL)
+	res, err := http.Get(newsText.Url)
 	if err != nil {
-		log.Printf("http get %s error: %v\n", URL, err)
+		log.Printf("http get %s error: %v\n", newsText.Url, err)
 		return
 	}
 
@@ -52,16 +37,36 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	// ====================================================================
 	// find title block and get title
 	// ====================================================================
-	block := doc.Find(".col-sm-9.border-left.level2_cont_right")
+	block := doc.Find("div.page > div.page-content > div.page-main > article")
 
-	title := block.Find("h1").Text()
+	title := block.Find("header > div.article-head__title").Text()
 
 	newsText.Title = title
 
 	// ====================================================================
+	// if article has a head_photo then update news image
+	// ====================================================================
+	if imageLink, ok := block.Find("header > div.article-head__photo > img").Attr("src"); ok {
+		fmt.Println(imageLink)
+		err = repo.Database.UpdateNewsImageById(newsText.NewsID, imageLink)
+		if err != nil {
+			log.Printf("error with update image by newsId: %v\n", err)
+		}
+		err = repo.Storage.RemoveImage(context.Background(), "news", strconv.Itoa(newsText.NewsID))
+		if err != nil {
+			log.Printf("error with remove image by newsId: %v\n", err)
+		}
+
+		err = repo.Storage.UploadImage(context.Background(), "news", imageLink, strconv.Itoa(newsText.NewsID))
+		if err != nil {
+			log.Printf("error with update image: %v\n", err)
+		}
+	}
+
+	// ====================================================================
 	// newsText to db
 	// ====================================================================
-	newsTextId, e := repo.CreateNewsText(newsText)
+	newsTextId, e := repo.Database.CreateNewsText(newsText)
 
 	if e != nil {
 		log.Printf("error with create news text %v\n", e)
@@ -71,14 +76,14 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	// ====================================================================
 	// find article text and iterate children tags
 	// ====================================================================
-	content := block.Find("div.article_text")
+	content := block.Find("div.article-content")
 
 	content.Children().Each(func(i int, s *goquery.Selection) {
 		// ====================================================================
 		// get Tag value
 		// ====================================================================
 		tagValue, err := s.Html()
-		tagValue = strings.Trim(tagValue, " ")
+		tagValue = strings.Trim(tagValue, " \n\t\r")
 		if err != nil {
 			log.Printf("error get tag value: %v\n", err)
 			return
@@ -93,14 +98,36 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 		// if text of tag is empty then
 		// check and add all possible images on tag to storage
 		// ====================================================================
-		if len(s.Text()) == 0 {
+		text := strings.Trim(s.Text(), " \n\t\r")
+
+		if len(text) == 0 || s.Nodes[0].Data == "div" {
+			// ====================================================================
+			// skip all external links
+			// ====================================================================
+			for _, class := range s.Nodes[0].Attr {
+				if strings.Contains(class.Val, "external") || strings.Contains(class.Val, "banner") ||
+					strings.Contains(class.Val, "match-embed") {
+					return
+				}
+			}
+			// ====================================================================
+			// find all images and add to repository
+			// ====================================================================
+			var imageLinks []string
 			s.Find("img").Each(func(i int, s *goquery.Selection) {
 				if attr, ok := s.Attr("src"); !ok {
 					return
 				} else {
+					// check for exists of picture
+					for _, v := range imageLinks {
+						if attr == v {
+							return
+						}
+					}
+					imageLinks = append(imageLinks, attr)
+
 					// make attribute
 					attr = strings.Trim(attr, " ")
-					attr = "https://turkmenportal.com" + attr
 
 					// make NewsContent
 					newsContent := models.NewsContent{
@@ -109,7 +136,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 						"img",
 						[]models.Attributes{
 							models.Attributes{
-								Key: "src",
+								Key:   "src",
 								Value: attr,
 							},
 						},
@@ -129,7 +156,6 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 					}
 				}
 			})
-
 			return
 		}
 

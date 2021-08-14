@@ -7,6 +7,7 @@ import (
 	"github.com/Hudayberdyyev/crawler/repository/postgres"
 	"github.com/Hudayberdyyev/crawler/repository/storage"
 	"github.com/Hudayberdyyev/crawler/source/TurkmenPortal"
+	"github.com/Hudayberdyyev/crawler/source/championat"
 	"github.com/Hudayberdyyev/crawler/source/rozetked"
 	"github.com/Hudayberdyyev/crawler/source/wylsacom"
 	"github.com/jackc/pgx"
@@ -20,6 +21,7 @@ const (
 	TurkmenPortalID = 1
 	Rozetked = 2
 	Wylsacom = 3
+	Championat = 4
 )
 
 func main() {
@@ -89,8 +91,14 @@ func RunParser(repo *repository.Repository, second int) {
 		})
 		// ============================================================
 		TurkmenPortal.ParseTurkmenPortal(repo, models.News{
-			CatID: 0,
+			CatID:  0,
 			AuthID: TurkmenPortalID,
+			Image:  "",
+		})
+		// ============================================================
+		championat.StartParser(repo, models.News{
+			CatID: 0,
+			AuthID: Championat,
 			Image: "",
 		})
 		// ============================================================

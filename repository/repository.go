@@ -18,10 +18,12 @@ type Database interface {
 	CreateTags(tagName string, hl string) (int, error)
 	CreateTagsText(tagId int, tagName string, hl string) (int, error)
 	CreateNewsTags(newsId int, tagId int) (int, error)
+	UpdateNewsImageById(newsId int, imageLink string) (error)
 }
 
 type Storage interface {
 	UploadImage(ctx context.Context,bucketName string, filePath string, objectName string) error
+	RemoveImage(ctx context.Context,bucketName string, objectName string) error
 }
 
 type Repository struct {

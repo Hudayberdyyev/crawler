@@ -58,6 +58,7 @@ INSERT INTO categories_text (category_id, hl, title) VALUES (14, 'ru', 'Публ
 INSERT INTO authors (logo, name, logo_mini, email) VALUES ('logo', 'Turkmen portal', 'logo_mini', 'turkmenportal@sng.media');
 INSERT INTO authors (logo, name, logo_mini, email) VALUES ('logo', 'Rozetked', 'logo_mini', 'news@rozetked.me');
 INSERT INTO authors (logo, name, logo_mini, email) VALUES ('logo', 'Wylsacom', 'logo_mini', 'alexanpob@wylsacom.media');
+INSERT INTO authors (logo, name, logo_mini, email) VALUES ('logo', 'Championat', 'logo_mini', 'sales@championat.com');
 
 INSERT INTO authors_text(author_id, hl, title, description) VALUES (1, 'tm', 'Turkmen Portal', 'Türkmenistanyn medeni, işewürlik we syyasy durmuşy barada internet portaly.' );
 INSERT INTO authors_text(author_id, hl, title, description) VALUES (1, 'ru', 'Turkmen Portal', 'Туркменистан, интернет портал о культурной, деловой и развлекательной жизни в Туркменистане.' );
@@ -65,3 +66,5 @@ INSERT INTO authors_text(author_id, hl, title, description) VALUES (2, 'tm', 'Ro
 INSERT INTO authors_text(author_id, hl, title, description) VALUES (2, 'ru', 'Rozetked', 'Rozetked — это качественные обзоры гаджетов и приложений, а теперь и сайт с новостями о технологиях, видеоиграх и кино.' );
 INSERT INTO authors_text(author_id, hl, title, description) VALUES (3, 'tm', 'Wylsacom', 'Wylsacom internet portaly.' );
 INSERT INTO authors_text(author_id, hl, title, description) VALUES (3, 'ru', 'Wylsacom', 'Проект Wylsacom Media — это в первую очередь крупнейший в СНГ YouTube-канал о технологичном образе жизни и обо всём том, что окружает современных молодых людей и девушек.' );
+INSERT INTO authors_text(author_id, hl, title, description) VALUES (4, 'tm', 'Championat', 'Championat meshur sport portaly' );
+INSERT INTO authors_text(author_id, hl, title, description) VALUES (4, 'ru', 'Championat', '«Чемпионат» — лидер среди спортивных порталов Рунета' );

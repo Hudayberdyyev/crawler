@@ -46,6 +46,15 @@ func (n *NewsStorage) UploadImage(ctx context.Context,bucketName string, filePat
 	return nil
 }
 
+func (n *NewsStorage) RemoveImage(ctx context.Context,bucketName string, objectName string) error {
+	err := n.minioClient.RemoveObject(ctx, bucketName, objectName, minio.RemoveObjectOptions{GovernanceBypass: true})
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Successfully removed object: %s\n", objectName)
+	return nil
+}
+
 func getImageReader(URL string) (io.Reader, error) {
 	if resp, err := http.Get(URL); err != nil {
 		return nil, err
