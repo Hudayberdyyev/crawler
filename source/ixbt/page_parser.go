@@ -46,8 +46,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 	var result []string
 	var ids []int
 
-	fmt.Println(URL)
-	sel := doc.Find("div#app > div.container.r > div.r_content > div.home > div.home_left > div.home_left__posts").Children().Filter("div.post_new")
+	sel := doc.Find("div.b-block.block__newslistdefault.b-lined-title > ul").Children().Filter("li")
 	for i := range sel.Nodes {
 		s := sel.Eq(i)
 		// ====================================================================
@@ -63,7 +62,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			continue
 		}
 		newsInfo.Image = "https://rozetked.me" + imageLink
-
+		
 		// ====================================================================
 		// link
 		// ====================================================================

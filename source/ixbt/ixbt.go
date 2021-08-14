@@ -1,12 +1,10 @@
 package ixbt
 
 import (
-	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -36,12 +34,12 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 	urlParts[0] = "https://www.ixbt.com/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
-		for indexPage := 1; ; indexPage++ {
-			dateStr := time.Now().Format(layoutDate)			
+		for indexPage := 0; ; indexPage++ {
+			dateStr := time.Now().AddDate(0,0,-indexPage).Format(layoutDate)
 			// ====================================================================
 			// make URL
 			// ====================================================================
-			newsUrl := urlParts[0] + urlParts[1] + "?page=" + strconv.Itoa(indexPage)
+			newsUrl := urlParts[0] + urlParts[1] + "/" + dateStr + "/"
 
 			newsId, err := repo.Database.GetLatestNewsIdByAuthorAndCategory(cat[i].id, newsInfo.AuthID)
 			if err != nil {
