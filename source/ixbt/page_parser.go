@@ -125,6 +125,5 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			Url:    link,
 		})
 	}
-
 	return http.StatusOK
 }

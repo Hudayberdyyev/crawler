@@ -35,7 +35,7 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 	urlParts[0] = "https://ixbt.com/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
-		for indexPage := 0; ; indexPage++ {
+		for indexPage := 1; ; indexPage++ {
 			page := time.Now().AddDate(0, 0, -indexPage)
 			dateStr := page.Format(layoutDatePage)
 			// ====================================================================

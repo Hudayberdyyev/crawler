@@ -1,14 +1,12 @@
 package ixbt
 
 import (
-	"context"
 	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/PuerkitoBio/goquery"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -42,23 +40,22 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	title := block.Find("div.b-article__header > h1").Text()
 
 	newsText.Title = title
-	fmt.Println(newsText.Title)
-	return
 
 	// ====================================================================
 	// newsText to db
 	// ====================================================================
-	newsTextId, e := repo.CreateNewsText(newsText)
+	// newsTextId, e := repo.CreateNewsText(newsText)
+	newsTextId := 1
 
-	if e != nil {
-		log.Printf("error with create news text %v\n", e)
-		return
-	}
+	//if e != nil {
+	//	log.Printf("error with create news text %v\n", e)
+	//	return
+	//}
 
 	// ====================================================================
 	// find article text and iterate children tags
 	// ====================================================================
-	content := block.Find("div.n_main__content.content_ru")
+	content := block.Find("div.b-article__content")
 
 	content.Children().Each(func(i int, s *goquery.Selection) {
 		// ====================================================================
@@ -98,8 +95,27 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 
 					// make attribute
 					attr = strings.Trim(attr, " ")
-					attr = "https://rozetked.me" + attr
-
+					attr = "https://www.ixbt.com" + attr
+					// ====================================================================
+					// if this is first image then update NewsImage
+					// ====================================================================
+					if cap(imageLinks) == 1 {
+						imageLink := attr
+						log.Printf("first image: %s\n", imageLink)
+						//err = repo.Database.UpdateNewsImageById(newsText.NewsID, imageLink)
+						if err != nil {
+							log.Printf("error with update image by newsId: %v\n", err)
+						}
+						//err = repo.Storage.RemoveImage(context.Background(), "news", strconv.Itoa(newsText.NewsID))
+						//if err != nil {
+						//	log.Printf("error with remove image by newsId: %v\n", err)
+						//}
+						//
+						//err = repo.Storage.UploadImage(context.Background(), "news", imageLink, strconv.Itoa(newsText.NewsID))
+						//if err != nil {
+						//	log.Printf("error with update image: %v\n", err)
+						//}
+					}
 					// make NewsContent
 					newsContent := models.NewsContent{
 						newsTextId,
@@ -113,18 +129,20 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 						},
 					}
 
+					fmt.Println(newsContent)
+
 					// NewsContent to db
-					contentId, contentErr := repo.CreateNewsContent(newsContent)
-					if contentErr != nil {
-						log.Printf("error with create news content: %v\n", contentErr)
-						return
-					}
+					//_, contentErr := repo.CreateNewsContent(newsContent)
+					//if contentErr != nil {
+					//	log.Printf("error with create news content: %v\n", contentErr)
+					//	return
+					//}
 
 					// Image to storage on "content" bucket
-					uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
-					if uploadErr != nil {
-						log.Printf("error with upload image: %v\n", uploadErr)
-					}
+					//uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
+					//if uploadErr != nil {
+					//	log.Printf("error with upload image: %v\n", uploadErr)
+					//}
 				}
 			})
 			return
@@ -164,14 +182,16 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 			}
 		}
 
+		fmt.Println(newsContent)
+
 		// ====================================================================
 		// newsContent to db
 		// ====================================================================
-		_, contentErr := repo.CreateNewsContent(newsContent)
-		if contentErr != nil {
-			log.Printf("error with create news content: %v\n", contentErr)
-			return
-		}
+		//_, contentErr := repo.CreateNewsContent(newsContent)
+		//if contentErr != nil {
+		//	log.Printf("error with create news content: %v\n", contentErr)
+		//	return
+		//}
 
 	})
 
