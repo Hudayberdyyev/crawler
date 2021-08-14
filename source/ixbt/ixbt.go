@@ -1,17 +1,20 @@
 package ixbt
 
 import (
+	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 const (
 	categoryCount  = 2
 	layoutDateTime = "15:04:05 02.01.2006 -07:00"
 	ru             = ""
+	layoutDate = "2006/01/02"
 )
 
 type Categories struct {
@@ -30,10 +33,11 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 		return
 	}
 
-	urlParts[0] = "https://rozetked.me/"
+	urlParts[0] = "https://www.ixbt.com/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
 		for indexPage := 1; ; indexPage++ {
+			dateStr := time.Now().Format(layoutDate)			
 			// ====================================================================
 			// make URL
 			// ====================================================================

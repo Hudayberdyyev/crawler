@@ -15,6 +15,7 @@ import (
 
 const (
 	ParsingInterval = 1 // on seconds
+	IXBT = 5
 )
 
 func main() {
@@ -73,7 +74,7 @@ func RunParser(repo *repository.Repository, second int) {
 		// ============================================================
 		ixbt.StartParser(repo, models.News{
 			CatID: 0,
-			AuthID: 1,
+			AuthID: IXBT,
 			Image: "",
 		})
 		// ============================================================
