@@ -37,11 +37,11 @@ func (n *NewsStorage) UploadImage(ctx context.Context,bucketName string, filePat
 		return err
 	}
 
-	uploadInfo, err := n.minioClient.PutObject(ctx, bucketName, objectName, imageReader, -1, minio.PutObjectOptions{ContentType:"application/octet-stream"})
+	_, err = n.minioClient.PutObject(ctx, bucketName, objectName, imageReader, -1, minio.PutObjectOptions{ContentType:"application/octet-stream"})
 	if err != nil {
 		return err
 	}
-	fmt.Println("Successfully uploaded bytes: ", uploadInfo)
+	fmt.Printf("Successfully uploaded bytes: %s\n", filePath)
 
 	return nil
 }
