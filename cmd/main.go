@@ -10,6 +10,7 @@ import (
 	"github.com/Hudayberdyyev/crawler/source/championat"
 	"github.com/Hudayberdyyev/crawler/source/rozetked"
 	"github.com/Hudayberdyyev/crawler/source/wylsacom"
+	"github.com/Hudayberdyyev/crawler/source/ixbt"
 	"github.com/jackc/pgx"
 	"github.com/minio/minio-go/v7"
 	"log"
@@ -22,6 +23,7 @@ const (
 	Rozetked = 2
 	Wylsacom = 3
 	Championat = 4
+	IXBT = 5
 )
 
 func main() {
@@ -97,8 +99,14 @@ func RunParser(repo *repository.Repository, second int) {
 		})
 		// ============================================================
 		championat.StartParser(repo, models.News{
-			CatID: 0,
+			CatID:  0,
 			AuthID: Championat,
+			Image:  "",
+		})
+		// ============================================================
+		ixbt.StartParser(repo, models.News{
+			CatID: 0,
+			AuthID: IXBT,
 			Image: "",
 		})
 		// ============================================================
