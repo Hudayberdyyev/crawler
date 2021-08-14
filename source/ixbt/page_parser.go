@@ -54,60 +54,29 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 
 		// ====================================================================
-		// image
+		// image default
 		// ====================================================================
-		imageLink, ok := s.Find("img").Attr("src")
-		if !ok {
-			log.Printf("No news images\n")
-			continue
-		}
-		newsInfo.Image = "https://rozetked.me" + imageLink
-		
+		newsInfo.Image = "https://ixbt.com" + "/pic/digit21.png"
+
 		// ====================================================================
 		// link
 		// ====================================================================
-		link, ok := s.Find("div.post_new-title > a").Attr("href")
+		link, ok := s.Find("a.item__text--title").Attr("href")
 		if !ok {
 			log.Printf("No news link\n")
 			continue
 		}
+		link = "https://ixbt.com" + link
 
 		// ====================================================================
 		// publishDate
 		// ====================================================================
-		metaSel := s.Find("div.post_new-meta > div.post_new-meta-author").Children().Eq(0)
-		publishDateStr := strings.Trim(metaSel.Text(), " \n\t\r")
+		metaSel := s.Find("span").Eq(0)
+		publishTimeStr := strings.Trim(metaSel.Text(), " \n\t\r")
 
-		splitDate := strings.Split(publishDateStr, " ")
-
-		if cap(splitDate) == 2 {
-			splitPublishTime := splitDate[0]
-			splitPublishDate := splitDate[1]
-			splitPublishTime = splitPublishTime + ":00"
-			publishDateStr = splitPublishTime + " " + splitPublishDate + " +03:00"
-		} else {
-			splitPublishTime := splitDate[0]
-			timeType := splitDate[1]
-
-			var durationType string
-			if strings.Contains(timeType, "час") {
-				durationType = "h"
-			} else {
-				if strings.Contains(timeType, "мин") {
-					durationType = "m"
-				} else {
-					if strings.Contains(timeType, "сек") {
-						durationType = "s"
-					}
-				}
-			}
-			postDuration, err := time.ParseDuration("-" + splitPublishTime + durationType)
-			if err != nil {
-				log.Printf("error with parse duration %s: %v\n", splitPublishTime, err)
-			}
-			publishDateStr = time.Now().Add(postDuration).Format(layoutDateTime)
-		}
-
+		publishTimeStr += ":00"
+		publishDateStr := newsInfo.PublishDate.Format(layoutDate)
+		publishDateStr = publishTimeStr + " " + publishDateStr + " +03:00"
 		publishDate, err := time.Parse(layoutDateTime, publishDateStr)
 		if err != nil {
 			log.Printf("error with parse date: %v\n", err)

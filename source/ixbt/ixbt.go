@@ -12,7 +12,8 @@ const (
 	categoryCount  = 2
 	layoutDateTime = "15:04:05 02.01.2006 -07:00"
 	ru             = ""
-	layoutDate = "2006/01/02"
+	layoutDatePage = "2006/01/02"
+	layoutDate = "02.01.2006"
 )
 
 type Categories struct {
@@ -31,11 +32,12 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 		return
 	}
 
-	urlParts[0] = "https://www.ixbt.com/"
+	urlParts[0] = "https://ixbt.com/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
 		for indexPage := 0; ; indexPage++ {
-			dateStr := time.Now().AddDate(0,0,-indexPage).Format(layoutDate)
+			page := time.Now().AddDate(0, 0, -indexPage)
+			dateStr := page.Format(layoutDatePage)
 			// ====================================================================
 			// make URL
 			// ====================================================================
@@ -50,11 +52,11 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 			if err != nil {
 				log.Printf("error with get latest new url: %v", err)
 			}
-
 			statusCode := NewsPageParser(repo, newsUrl, latestLink, models.News{
 				CatID:  cat[i].id,
 				AuthID: newsInfo.AuthID,
 				Image:  "",
+				PublishDate: page,
 			})
 
 			if statusCode == http.StatusNotModified || statusCode == http.StatusBadRequest {
