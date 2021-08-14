@@ -1,12 +1,13 @@
 package ixbt
 
 import (
-	"fmt"
+	"context"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/PuerkitoBio/goquery"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -44,13 +45,12 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	// ====================================================================
 	// newsText to db
 	// ====================================================================
-	// newsTextId, e := repo.CreateNewsText(newsText)
-	newsTextId := 1
+	newsTextId, e := repo.CreateNewsText(newsText)
 
-	//if e != nil {
-	//	log.Printf("error with create news text %v\n", e)
-	//	return
-	//}
+	if e != nil {
+		log.Printf("error with create news text %v\n", e)
+		return
+	}
 
 	// ====================================================================
 	// find article text and iterate children tags
@@ -101,20 +101,19 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 					// ====================================================================
 					if cap(imageLinks) == 1 {
 						imageLink := attr
-						log.Printf("first image: %s\n", imageLink)
-						//err = repo.Database.UpdateNewsImageById(newsText.NewsID, imageLink)
+						err = repo.Database.UpdateNewsImageById(newsText.NewsID, imageLink)
 						if err != nil {
 							log.Printf("error with update image by newsId: %v\n", err)
 						}
-						//err = repo.Storage.RemoveImage(context.Background(), "news", strconv.Itoa(newsText.NewsID))
-						//if err != nil {
-						//	log.Printf("error with remove image by newsId: %v\n", err)
-						//}
-						//
-						//err = repo.Storage.UploadImage(context.Background(), "news", imageLink, strconv.Itoa(newsText.NewsID))
-						//if err != nil {
-						//	log.Printf("error with update image: %v\n", err)
-						//}
+						err = repo.Storage.RemoveImage(context.Background(), "news", strconv.Itoa(newsText.NewsID))
+						if err != nil {
+							log.Printf("error with remove image by newsId: %v\n", err)
+						}
+
+						err = repo.Storage.UploadImage(context.Background(), "news", imageLink, strconv.Itoa(newsText.NewsID))
+						if err != nil {
+							log.Printf("error with update image: %v\n", err)
+						}
 					}
 					// make NewsContent
 					newsContent := models.NewsContent{
@@ -129,20 +128,18 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 						},
 					}
 
-					fmt.Println(newsContent)
-
 					// NewsContent to db
-					//_, contentErr := repo.CreateNewsContent(newsContent)
-					//if contentErr != nil {
-					//	log.Printf("error with create news content: %v\n", contentErr)
-					//	return
-					//}
+					contentId, contentErr := repo.CreateNewsContent(newsContent)
+					if contentErr != nil {
+						log.Printf("error with create news content: %v\n", contentErr)
+						return
+					}
 
 					// Image to storage on "content" bucket
-					//uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
-					//if uploadErr != nil {
-					//	log.Printf("error with upload image: %v\n", uploadErr)
-					//}
+					uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
+					if uploadErr != nil {
+						log.Printf("error with upload image: %v\n", uploadErr)
+					}
 				}
 			})
 			return
@@ -182,16 +179,14 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 			}
 		}
 
-		fmt.Println(newsContent)
-
 		// ====================================================================
 		// newsContent to db
 		// ====================================================================
-		//_, contentErr := repo.CreateNewsContent(newsContent)
-		//if contentErr != nil {
-		//	log.Printf("error with create news content: %v\n", contentErr)
-		//	return
-		//}
+		_, contentErr := repo.CreateNewsContent(newsContent)
+		if contentErr != nil {
+			log.Printf("error with create news content: %v\n", contentErr)
+			return
+		}
 
 	})
 

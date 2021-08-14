@@ -1,12 +1,14 @@
 package ixbt
 
 import (
+	"context"
 	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/PuerkitoBio/goquery"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -54,7 +56,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		// image default
 		// ====================================================================
-		newsInfo.Image = ""
+		newsInfo.Image = "https://www.ixbt.com/images/ixbt-logo-new-sm.jpg"
 
 		// ====================================================================
 		// link
@@ -92,20 +94,19 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		//	article to db
 		// ====================================================================
-		//newsId, e := repo.Database.CreateNews(newsInfo)
-		//if e != nil {
-		//	log.Printf("Error with create news: %v\n", e)
-		//	continue
-		//}
-		newsId := 1;
+		newsId, e := repo.Database.CreateNews(newsInfo)
+		if e != nil {
+			log.Printf("Error with create news: %v\n", e)
+			continue
+		}
 
 		// ====================================================================
 		// image article to storage
 		// ====================================================================
-		//uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
-		//if uploadErr != nil {
-		//	log.Printf("error with upload image: %v\n", uploadErr)
-		//}
+		uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
+		if uploadErr != nil {
+			log.Printf("error with upload image: %v\n", uploadErr)
+		}
 
 		// ====================================================================
 		// add ids and links articles to slices

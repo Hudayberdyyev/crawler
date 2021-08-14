@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	categoryCount  = 2
+	categoryCount  = 1
 	layoutDateTime = "15:04:05 02.01.2006 -07:00"
 	ru             = ""
 	layoutDatePage = "2006/01/02"
@@ -72,12 +72,6 @@ func getCategories(repo *repository.Repository) ([]Categories, error) {
 	category = append(category, Categories{
 		link: "news",
 		name: "Технология",
-		id:   0,
-	})
-
-	category = append(category, Categories{
-		link: "articles",
-		name: "Публикации",
 		id:   0,
 	})
 
