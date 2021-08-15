@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -62,7 +63,12 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			log.Printf("No news images\n")
 			continue
 		}
-		newsInfo.Image="https://turkmenportal.com" + imageLink
+
+		if strings.Contains(imageLink, "https") {
+			newsInfo.Image = imageLink
+		} else {
+			newsInfo.Image="https://turkmenportal.com" + imageLink
+		}
 
 		// link article
 		// ====================================================================
@@ -95,7 +101,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 
 		//	article to db
 		// ====================================================================
-		newsId, e := repo.CreateNews(newsInfo)
+		newsId, e := repo.Database.CreateNews(newsInfo)
 		if e != nil {
 			log.Printf("Error with create news: %v\n", e)
 			continue
@@ -103,7 +109,7 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 
 		// image article to storage
 		// ====================================================================
-		uploadErr := repo.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
+		uploadErr := repo.Storage.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
 		if uploadErr != nil {
 			log.Printf("error with upload image: %v\n", uploadErr)
 		}

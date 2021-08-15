@@ -35,7 +35,7 @@ var Categories = [categoryCount]string{
 
 
 func ParseTurkmenPortal(repo *repository.Repository, newsInfo models.News) {
-	for i := 13; i < categoryCount; i++ {
+	for i := 0; i < categoryCount; i++ {
 		if Categories[i] == "compositions" {
 			urlParts[0] = "https://turkmenportal.com/"
 			urlParts[2] = "/a/index?path=publikacii&Compositions_sort=date_added.desc&Blog_sort_temp=&page="

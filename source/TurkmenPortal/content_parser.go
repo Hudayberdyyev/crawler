@@ -61,7 +61,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	// ====================================================================
 	// newsText to db
 	// ====================================================================
-	newsTextId, e := repo.CreateNewsText(newsText)
+	newsTextId, e := repo.Database.CreateNewsText(newsText)
 
 	if e != nil {
 		log.Printf("error with create news text %v\n", e)
@@ -116,14 +116,14 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 					}
 
 					// NewsContent to db
-					contentId, contentErr := repo.CreateNewsContent(newsContent)
+					contentId, contentErr := repo.Database.CreateNewsContent(newsContent)
 					if contentErr != nil {
 						log.Printf("error with create news content: %v\n", contentErr)
 						return
 					}
 
 					// Image to storage on "content" bucket
-					uploadErr := repo.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
+					uploadErr := repo.Storage.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
 					if uploadErr != nil {
 						log.Printf("error with upload image: %v\n", uploadErr)
 					}
@@ -170,7 +170,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 		// ====================================================================
 		// newsContent to db
 		// ====================================================================
-		_, contentErr := repo.CreateNewsContent(newsContent)
+		_, contentErr := repo.Database.CreateNewsContent(newsContent)
 		if contentErr != nil {
 			log.Printf("error with create news content: %v\n", contentErr)
 			return
