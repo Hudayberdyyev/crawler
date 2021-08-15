@@ -80,6 +80,7 @@ func RunParser(repo *repository.Repository, second int) {
 
 	for _ = range ticker.C{
 		// ============================================================
+		fmt.Println("Checking updates [turkmenportal]")	
 		TurkmenPortal.ParseTurkmenPortal(repo, models.News{
 			CatID:  0,
 			AuthID: TurkmenPortalID,
@@ -93,18 +94,21 @@ func RunParser(repo *repository.Repository, second int) {
 			Image:  "",
 		})
 		// ============================================================
+		fmt.Println("Checking updates [wylsacom]")
 		wylsacom.StartParser(repo, models.News{
 			CatID: 0,
 			AuthID: Wylsacom,
 			Image: "",
 		})
 		// ============================================================
+		fmt.Println("Checking updates [championat]")
 		championat.StartParser(repo, models.News{
 			CatID:  0,
 			AuthID: Championat,
 			Image:  "",
 		})
 		// ============================================================
+		fmt.Println("Checking updates [ixbt]")
 		ixbt.StartParser(repo, models.News{
 			CatID: 0,
 			AuthID: IXBT,
