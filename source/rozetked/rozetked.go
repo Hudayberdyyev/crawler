@@ -74,6 +74,9 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	// ====================================================================
 	content := block.Find("div.n_main__content.content_ru")
 
+	var imageLinks []string
+	var ids []int
+
 	content.Children().Each(func(i int, s *goquery.Selection) {
 		// ====================================================================
 		// get Tag value
@@ -96,27 +99,58 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 		// ====================================================================
 		text := strings.Trim(s.Text(), " \n\t\r")
 
+
+		tagName := "img"
 		if len(text) == 0 || s.Nodes[0].Data == "div" {
-			var imageLinks []string
-			s.Find("img").Each(func(i int, s *goquery.Selection) {
-				if attr, ok := s.Attr("src"); !ok {
+			if divAttr, ok := s.Attr("class"); ok {
+				if strings.Contains(divAttr, "medium-insert-images-grid") {
+					tagName = "slider"
+				} else {
+					tagName = "img"
+				}
+			}
+
+			s.Find("img").Each(func(i int, selImg *goquery.Selection) {
+				if attr, ok := selImg.Attr("src"); !ok {
 					return
 				} else {
+					// ====================================================================
 					// check for exists of picture
-					for _, v := range imageLinks {
-						if attr == v { return }
+					// ====================================================================
+					for index, v := range imageLinks {
+						if attr == v {
+							err = repo.Database.UpdateTagByContentId(ids[index], "slider")
+							if err != nil {
+								log.Printf("error with update tag by content id: %v\n", err)
+							}
+							return
+						}
 					}
+
+					// ====================================================================
+					// if there no such picture, then append to imageLinks
+					// ====================================================================
 					imageLinks = append(imageLinks, attr)
 
-					// make attribute
+					// ====================================================================
+					// trim spaces
+					// ====================================================================
 					attr = strings.Trim(attr, " ")
-					attr = "https://rozetked.me" + attr
 
-					// make NewsContent
+					// ====================================================================
+					// if link not contains https then, add prefix https://rozetked.me
+					// ====================================================================
+					if !strings.Contains(attr, "https") {
+						attr = "https://rozetked.me" + attr
+					}
+
+					// ====================================================================
+					// make newsContent record
+					// ====================================================================
 					newsContent := models.NewsContent{
 						newsTextId,
 						"",
-						"img",
+						tagName,
 						[]models.Attributes{
 							models.Attributes{
 								Key: "src",
@@ -125,14 +159,23 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 						},
 					}
 
-					// NewsContent to db
+					// ====================================================================
+					// newsContent to db
+					// ====================================================================
 					contentId, contentErr := repo.Database.CreateNewsContent(newsContent)
 					if contentErr != nil {
 						log.Printf("error with create news content: %v\n", contentErr)
 						return
 					}
 
-					// Image to storage on "content" bucket
+					// ====================================================================
+					// append contentId to ids slice. for sliders
+					// ====================================================================
+					ids = append(ids, contentId)
+
+					// ====================================================================
+					// upload image to minio to "content" bucket
+					// ====================================================================
 					uploadErr := repo.Storage.UploadImage(context.Background(), "content", attr, strconv.Itoa(contentId))
 					if uploadErr != nil {
 						log.Printf("error with upload image: %v\n", uploadErr)
@@ -375,7 +418,7 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 	urlParts[0] = "https://rozetked.me/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
-		for indexPage := 1; ; indexPage++ {
+		for indexPage := 2; ; indexPage++ {
 			// ====================================================================
 			// make URL
 			// ====================================================================
