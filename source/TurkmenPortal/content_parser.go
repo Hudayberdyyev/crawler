@@ -54,7 +54,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	// ====================================================================
 	block := doc.Find(".col-sm-9.border-left.level2_cont_right")
 
-	title := block.Find("h1").Text()
+	title := block.Find("h1").Eq(0).Text()
 
 	newsText.Title = title
 
