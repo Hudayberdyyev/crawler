@@ -7,7 +7,7 @@ WORKDIR /github.com/Hudayberdyyev/crawler/
 
 RUN go mod download
 
-RUN GOOS=linux go build -o crawler cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o crawler cmd/main.go
 
 FROM alpine:latest
 
@@ -15,4 +15,4 @@ WORKDIR /
 
 COPY --from=build /github.com/Hudayberdyyev/crawler/crawler .
 
-CMD ./crawler
+CMD ["./crawler"]
