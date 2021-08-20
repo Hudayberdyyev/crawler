@@ -178,3 +178,13 @@ func (n *NewsDatabase) UpdateTagByContentId(contentId int, tagName string) (erro
 	if err != nil { return err }
 	return nil
 }
+
+func (n *NewsDatabase) GetNewsIdByUrl(url string) (int, error) {
+	var id int
+	query := fmt.Sprintf("select news_id from %s where url=$1 limit 1", newsTextTable)
+	err := n.db.QueryRow(query, url).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}

@@ -20,6 +20,7 @@ type Database interface {
 	CreateNewsTags(newsId int, tagId int) (int, error)
 	UpdateNewsImageById(newsId int, imageLink string) (error)
 	UpdateTagByContentId(contentId int, tagName string) (error)
+	GetNewsIdByUrl(url string) (int, error)
 }
 
 type Storage interface {
