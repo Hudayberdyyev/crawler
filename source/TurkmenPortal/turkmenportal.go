@@ -51,7 +51,7 @@ func ParseTurkmenPortal(repo *repository.Repository, newsInfo models.News) {
 			// =========================================================
 			// we need cycle the parser until got a connection
 			// =========================================================
-			statusCode := 408
+			statusCode := http.StatusRequestTimeout
 			for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
 				statusCode, lastLink = NewsPageParser(repo, newUrl, models.News{
 					CatID:  i + 1,
