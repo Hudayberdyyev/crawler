@@ -6,7 +6,6 @@ import (
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/Hudayberdyyev/crawler/repository/postgres"
 	"github.com/Hudayberdyyev/crawler/repository/storage"
-	"github.com/Hudayberdyyev/crawler/source/TurkmenPortal"
 	"github.com/Hudayberdyyev/crawler/source/championat"
 	"github.com/Hudayberdyyev/crawler/source/ixbt"
 	"github.com/Hudayberdyyev/crawler/source/rozetked"
@@ -75,12 +74,12 @@ func initMinio(config storage.Config) (*minio.Client, error) {
 }
 
 func RunParser(repo *repository.Repository) {
-		fmt.Println("Crawling [turkmenportal]")
-		TurkmenPortal.ParseTurkmenPortal(repo, models.News{
-			CatID:  0,
-			AuthID: TurkmenPortalID,
-			Image:  "",
-		})			
+		//fmt.Println("Crawling [turkmenportal]")
+		//TurkmenPortal.ParseTurkmenPortal(repo, models.News{
+		//	CatID:  0,
+		//	AuthID: TurkmenPortalID,
+		//	Image:  "",
+		//})
 		// ============================================================
 		fmt.Println("Crawling [rozetked]")
 		rozetked.StartParser(repo, models.News{
