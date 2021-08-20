@@ -3,7 +3,6 @@ package TurkmenPortal
 import (
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -43,27 +42,32 @@ func ParseTurkmenPortal(repo *repository.Repository, newsInfo models.News) {
 			urlParts[0] = "https://turkmenportal.com/blog/a/index?path=novosti%2F"
 			urlParts[2] = "&Blog_sort=date_added.desc&page="
 		}
+		lastLink := ""
+		prevLastLink := ""
 		for indexPage := 1; ; indexPage++ {
 			urlParts[1] = Categories[i]
 			newUrl := urlParts[0] + urlParts[1] + urlParts[2] + strconv.Itoa(indexPage)
 
-			newsId, err := repo.GetLatestNewsIdByAuthorAndCategory(i+1, newsInfo.AuthID)
-			if err != nil {
-				log.Printf("error with get latest news id: %v", err)
+			// =========================================================
+			// we need cycle the parser until got a connection
+			// =========================================================
+			statusCode := http.StatusRequestTimeout
+			for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
+				statusCode, lastLink = NewsPageParser(repo, newUrl, models.News{
+					CatID:  i + 1,
+					AuthID: newsInfo.AuthID,
+					Image:  "",
+				})
 			}
-
-			latestLink, err := repo.GetLatestNewsUrlByNewsId(newsId)
-			if err != nil {
-				log.Printf("error with get latest new url: %v", err)
+			// =========================================================
+			// if lastLink equal to prevLastLink then we got a end of news for this category
+			// =========================================================
+			if lastLink == prevLastLink {
+				break
 			}
+			prevLastLink = lastLink
 
-			statusCode := NewsPageParser(repo, newUrl, latestLink, models.News{
-				CatID:  i + 1,
-				AuthID: newsInfo.AuthID,
-				Image:  "",
-			})
-
-			if statusCode == http.StatusNotModified || statusCode == http.StatusBadRequest{
+			if statusCode == http.StatusNotFound {
 				break
 			}
 		}

@@ -14,7 +14,6 @@ import (
 	"github.com/jackc/pgx"
 	"github.com/minio/minio-go/v7"
 	"log"
-	"time"
 )
 
 const (
@@ -57,7 +56,7 @@ func main() {
 		log.Fatalf("Error with init minio: %v\n", err)
 	}
 
-	RunParser(repository, ParsingInterval)
+	RunParser(repository)
 }
 
 func initDB(config postgres.Config)  (*pgx.Conn, error){
@@ -75,40 +74,36 @@ func initMinio(config storage.Config) (*minio.Client, error) {
 	return storage.NewMinio(config)
 }
 
-func RunParser(repo *repository.Repository, second int) {
-	ticker := time.NewTicker(time.Duration(second) * time.Second)
-
-	for _ = range ticker.C{
-		// ============================================================
-		fmt.Println("Checking updates [turkmenportal]")	
+func RunParser(repo *repository.Repository) {
+		fmt.Println("Crawling [turkmenportal]")
 		TurkmenPortal.ParseTurkmenPortal(repo, models.News{
 			CatID:  0,
 			AuthID: TurkmenPortalID,
 			Image:  "",
-		})
+		})			
 		// ============================================================
-		fmt.Println("Checking updates [rozetked]")
+		fmt.Println("Crawling [rozetked]")
 		rozetked.StartParser(repo, models.News{
 			CatID:  0,
 			AuthID: Rozetked,
 			Image:  "",
 		})
 		// ============================================================
-		fmt.Println("Checking updates [wylsacom]")
+		fmt.Println("Crawling [wylsacom]")
 		wylsacom.StartParser(repo, models.News{
 			CatID: 0,
 			AuthID: Wylsacom,
 			Image: "",
 		})
 		// ============================================================
-		fmt.Println("Checking updates [championat]")
+		fmt.Println("Crawling [championat]")
 		championat.StartParser(repo, models.News{
 			CatID:  0,
 			AuthID: Championat,
 			Image:  "",
 		})
 		// ============================================================
-		fmt.Println("Checking updates [ixbt]")
+		fmt.Println("Crawling [ixbt]")
 		ixbt.StartParser(repo, models.News{
 			CatID: 0,
 			AuthID: IXBT,
@@ -116,5 +111,4 @@ func RunParser(repo *repository.Repository, second int) {
 		})
 		// ============================================================
 		fmt.Println("everything up to date !!!")
-	}
 }

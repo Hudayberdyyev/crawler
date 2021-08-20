@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func NewsPageParser(repo *repository.Repository, URL string, latestLink string, newsInfo models.News ) int {
+func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.News ) (int, string) {
 	// ====================================================================
 	// http get URL
 	// ====================================================================
@@ -136,5 +136,5 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		})
 	}
 
-	return http.StatusOK
+	return http.StatusOK, result[cap(result)-1]
 }
