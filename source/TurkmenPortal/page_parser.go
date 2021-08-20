@@ -23,7 +23,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 		if strings.Contains(err.Error(), "no such host"){
 			return http.StatusRequestTimeout, ""
 		}
-		return http.StatusGatewayTimeout, ""
+		return http.StatusGatewayTimeout, "error"
 	}
 
 	if res.StatusCode == http.StatusNotFound {
@@ -38,7 +38,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		log.Printf("Error load html document: %v\n", err)
-		return http.StatusInternalServerError, ""
+		return http.StatusInternalServerError, "error"
 	}
 
 	// news list parse
