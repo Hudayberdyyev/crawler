@@ -1,9 +1,9 @@
-version: '3.8'
+version: '3.3'
 
 services:
   postgresql:
-    image: postgres:13.3
-    container_name: parser-db
+    image: postgres
+    container_name: db
     ports:
       - 5432:5432
     restart: always
@@ -12,7 +12,7 @@ services:
       - POSTGRES_PASSWORD=qwerty
       - POSTGRES_DB=belet_news
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - ./data/database:/var/lib/postgresql/data
 
   minio:
     image: minio/minio
@@ -26,13 +26,11 @@ services:
       - MINIO_ACCESS_KEY=AHMET
       - MINIO_SECRET_KEY=BELETNEWS
     volumes:
-      - minio:/data
+      - ./data/storage:/data
     command: server /data
 
   turkmenportal:
-    build:
-      context: ../..
-      dockerfile: ./Dockerfile      
+    build: ./
     restart: on-failure
     environment:
       - SOURCE=turkmenportal
@@ -41,9 +39,7 @@ services:
       - minio
 
   wylsacom:
-    build:
-      context: ../..
-      dockerfile: ./Dockerfile      
+    build: ./
     restart: on-failure
     environment:
       - SOURCE=wylsacom
@@ -52,9 +48,7 @@ services:
       - minio
 
   rozetked:
-    build:
-      context: ../..
-      dockerfile: ./Dockerfile      
+    build: ./
     restart: on-failure
     environment:
       - SOURCE=rozetked
@@ -63,9 +57,7 @@ services:
       - minio
 
   ixbt:
-    build:
-      context: ../..
-      dockerfile: ./Dockerfile      
+    build: ./
     restart: on-failure
     environment:
       - SOURCE=ixbt
@@ -74,21 +66,13 @@ services:
       - minio
 
   championat:
-    build:
-      context: ../..
-      dockerfile: ./Dockerfile      
+    build: ./
     restart: on-failure
     environment:
       - SOURCE=championat
     depends_on:
       - postgresql
       - minio
-
-volumes:
-  postgres:
-    driver: local
-  minio:
-    driver: local
 
 networks:
   default:
