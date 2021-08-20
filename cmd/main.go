@@ -45,7 +45,7 @@ func main() {
 	defer db.Close()
 
 	minioClient, err := initMinio(storage.Config{
-		Endpoint: "storage",
+		Endpoint: "storage"+":9000",
 		AccessKeyId: "AHMET",
 		SecretAccesKey: "Ah25101996!",
 		UseSSL: false,

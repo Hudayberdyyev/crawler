@@ -12,11 +12,11 @@ services:
       - POSTGRES_PASSWORD=qwerty
       - POSTGRES_DB=belet_news
     volumes:
-      - ./data/database:/var/lib/postgresql/data
+      - /var/lib/docker/data/database:/var/lib/postgresql/data
 
   minio:
     image: minio/minio
-    container_name: parser-storage
+    container_name: storage
     ports:
       - 9000:9000
       - 9001:9001
@@ -26,7 +26,7 @@ services:
       - MINIO_ACCESS_KEY=AHMET
       - MINIO_SECRET_KEY=BELETNEWS
     volumes:
-      - ./data/storage:/data
+      - /var/lib/docker/data/storage:/data
     command: server /data
 
   turkmenportal:
