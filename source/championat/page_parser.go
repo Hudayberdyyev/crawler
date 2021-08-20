@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func NewsPageParser(repo *repository.Repository, URL string, latestLink string, newsInfo models.News) int {
+func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.News) (int, string) {
 	// ====================================================================
 	// http get URL
 	// ====================================================================
@@ -21,14 +21,16 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 
 	if err != nil {
 		log.Printf("http.Get(URL) error: %v\n", err)
-		return http.StatusBadRequest
+		if strings.Contains(err.Error(), "no such host"){
+			return http.StatusRequestTimeout, "error"
+		}
+		return http.StatusGatewayTimeout, "error"
 	}
 
 	defer res.Body.Close()
 
-	if res.StatusCode != 200 {
-		log.Printf("Status code error: %d %s\n", res.StatusCode, res.Status)
-		return http.StatusBadRequest
+	if res.StatusCode == http.StatusNotFound {
+		return http.StatusNotFound, "error"
 	}
 
 	// ====================================================================
@@ -37,17 +39,14 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		log.Printf("Error load html document: %v\n", err)
-		return http.StatusBadRequest
+		return http.StatusInternalServerError, "error"
 	}
 	// ====================================================================
 	// news list parse
 	// ====================================================================
-	var result []string
-	var ids []int
-
 	fmt.Println(URL)
 	sel := doc.Find("div.page-content > div.page-main > div.news._all > div.news-items").Children()
-	var postDate string
+	var postDate, lastLink string
 	for i := range sel.Nodes {
 		s := sel.Eq(i)
 		// ====================================================================
@@ -88,8 +87,8 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 				log.Printf("No news link\n")
 				continue
 			}
-
 			link = "https://championat.com" + link
+			lastLink = link
 
 			// ====================================================================
 			// publishDate
@@ -108,9 +107,10 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			// ====================================================================
 			// checking a new article
 			// ====================================================================
-			if link == latestLink {
-				fmt.Println("everything up to date !")
-				return http.StatusNotModified
+			_, err = repo.Database.GetNewsIdByUrl(link)
+			if err == nil {
+				log.Printf("%s link already has in database\n", link)
+				continue
 			}
 
 			// ====================================================================
@@ -159,27 +159,22 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 				log.Printf("error with upload image: %v\n", uploadErr)
 			}
 
-			// ====================================================================
-			// add ids and links articles to slices
-			// ====================================================================
-			ids = append(ids, newsId)
-			result = append(result, link)
+			statusCode := http.StatusRequestTimeout
+			for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
+				statusCode = NewsContentParser(repo, models.NewsText{
+					NewsID: newsId,
+					Hl:     ru,
+					Title:  "",
+					Url:    link,
+				})
+			}
 		}
 	}
 
 	// ====================================================================
 	// iterate articles (tm, ru)
 	// ====================================================================
-	for index, link := range result {
-		NewsContentParser(repo, models.NewsText{
-			NewsID: ids[index],
-			Hl:     ru,
-			Title:  "",
-			Url:    link,
-		})
-	}
-
-	return http.StatusOK
+	return http.StatusOK, lastLink
 }
 
 func getMonthByRussianName(s string) string {
