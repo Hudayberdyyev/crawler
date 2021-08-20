@@ -40,6 +40,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 	// ====================================================================
 	var result []string
 	var ids	   []int
+	var lastLink string
 
 	sel := doc.Find("div#yw3 > div.items").Children()
 	for i := range sel.Nodes {
@@ -53,7 +54,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 
 		// image article
 		// ====================================================================
-		imageLink, ok := s.Find("img").Attr("src")
+		imageLink, ok := s.Find("img").Eq(0).Attr("src")
 		if !ok {
 			log.Printf("No news images\n")
 			continue
@@ -67,7 +68,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 
 		// link article
 		// ====================================================================
-		link, ok := s.Find("h4.entry-title > a").Attr("href")
+		link, ok := s.Find("h4.entry-title > a").Eq(0).Attr("href")
 		if !ok {
 			log.Printf("No news link\n")
 			continue
@@ -75,7 +76,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 
 		// publishDate article
 		// ====================================================================
-		publishDateStr, ok := s.Find("time").Attr("datetime")
+		publishDateStr, ok := s.Find("time").Eq(0).Attr("datetime")
 		if !ok {
 			log.Printf("No date in news\n")
 			continue
@@ -88,10 +89,11 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 		newsInfo.PublishDate = publishDate
 
 		// checking a new article
-		// ====================================================================
-		if link == latestLink {
-			fmt.Println("everything up to date !")
-			return http.StatusNotModified
+		// ===================================================================
+		_, err = repo.Database.GetNewsIdByUrl(link)
+		if err == nil {
+			lastLink = link
+			continue
 		}
 
 		//	article to db
@@ -113,23 +115,30 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 		// ====================================================================
 		ids = append(ids, newsId)
 		result = append(result, link)
+		lastLink = link
 	}
 	// iterate articles (tm, ru)
 	// ====================================================================
 	for index, link := range result {
-		NewsContentParser(repo, models.NewsText{
-			NewsID: ids[index],
-			Hl:     ru,
-			Title:  "",
-			Url:    link,
-		})
-		NewsContentParser(repo, models.NewsText{
-			NewsID: ids[index],
-			Hl:     tm,
-			Title:  "",
-			Url:    link,
-		})
+		statusCode := http.StatusRequestTimeout
+		for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
+			statusCode = NewsContentParser(repo, models.NewsText{
+				NewsID: ids[index],
+				Hl:     ru,
+				Title:  "",
+				Url:    link,
+			})
+		}
+		statusCode  = http.StatusRequestTimeout
+		for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
+			statusCode = NewsContentParser(repo, models.NewsText{
+				NewsID: ids[index],
+				Hl:     tm,
+				Title:  "",
+				Url:    link,
+			})
+		}
 	}
 
-	return http.StatusOK, result[cap(result)-1]
+	return http.StatusOK, lastLink
 }

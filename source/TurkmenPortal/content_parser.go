@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
+func NewsContentParser(repo *repository.Repository, newsText models.NewsText) (int){
 	// ====================================================================
 	// collect URL
 	// ====================================================================
