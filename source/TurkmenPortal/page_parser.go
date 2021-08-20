@@ -21,13 +21,13 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 	if err != nil {
 		log.Printf("http.Get(URL) error: %v\n", err)
 		if strings.Contains(err.Error(), "no such host"){
-			return http.StatusRequestTimeout, ""
+			return http.StatusRequestTimeout, "error"
 		}
 		return http.StatusGatewayTimeout, "error"
 	}
 
 	if res.StatusCode == http.StatusNotFound {
-		return http.StatusNotFound, ""
+		return http.StatusNotFound, "error"
 	}
 
 	defer res.Body.Close()
