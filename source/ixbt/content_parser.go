@@ -11,17 +11,19 @@ import (
 	"strings"
 )
 
-func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
+func NewsContentParser(repo *repository.Repository, newsText models.NewsText) int{
 	res, err := http.Get(newsText.Url)
 	if err != nil {
 		log.Printf("http get %s error: %v\n", newsText.Url, err)
-		return
+		if strings.Contains(err.Error(), "no such host") {
+			return http.StatusRequestTimeout
+		}
+		return http.StatusGatewayTimeout
 	}
 
 	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		log.Printf("status code error: %d %s\n", res.StatusCode, res.Status)
-		return
+	if res.StatusCode == http.StatusNotFound {
+		return http.StatusNotFound
 	}
 
 	// ====================================================================
@@ -30,7 +32,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		log.Printf("load html document error: %v\n", err)
-		return
+		return http.StatusInternalServerError
 	}
 
 	// ====================================================================
@@ -49,7 +51,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 
 	if e != nil {
 		log.Printf("error with create news text %v\n", e)
-		return
+		return http.StatusInternalServerError
 	}
 
 	// ====================================================================
@@ -191,4 +193,5 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	})
 
 	log.Printf("%s) %s parsed\n", newsText.Hl, newsText.Title)
+	return http.StatusOK
 }

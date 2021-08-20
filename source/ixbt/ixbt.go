@@ -35,6 +35,8 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 	urlParts[0] = "https://ixbt.com/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
+		lastLink := ""
+		prevLastLink := ""
 		for indexPage := 1; ; indexPage++ {
 			page := time.Now().AddDate(0, 0, -indexPage)
 			dateStr := page.Format(layoutDatePage)
@@ -43,23 +45,25 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 			// ====================================================================
 			newsUrl := urlParts[0] + urlParts[1] + "/" + dateStr + "/"
 
-			newsId, err := repo.Database.GetLatestNewsIdByAuthorAndCategory(cat[i].id, newsInfo.AuthID)
-			if err != nil {
-				log.Printf("error with get latest news id: %v", err)
+			statusCode := http.StatusRequestTimeout
+			for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
+				statusCode, lastLink = NewsPageParser(repo, newsUrl, models.News{
+					CatID:  cat[i].id,
+					AuthID: newsInfo.AuthID,
+					Image:  "",
+					PublishDate: page,
+				})
 			}
 
-			latestLink, err := repo.Database.GetLatestNewsUrlByNewsId(newsId)
-			if err != nil {
-				log.Printf("error with get latest new url: %v", err)
+			// =========================================================
+			// if lastLink equal to prevLastLink then we got a end of news for this category
+			// =========================================================
+			if lastLink == prevLastLink {
+				break
 			}
-			statusCode := NewsPageParser(repo, newsUrl, latestLink, models.News{
-				CatID:  cat[i].id,
-				AuthID: newsInfo.AuthID,
-				Image:  "",
-				PublishDate: page,
-			})
+			prevLastLink = lastLink
 
-			if statusCode == http.StatusNotModified || statusCode == http.StatusBadRequest {
+			if statusCode == http.StatusNotFound {
 				break
 			}
 		}

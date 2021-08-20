@@ -6,7 +6,6 @@ import (
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/Hudayberdyyev/crawler/repository/postgres"
 	"github.com/Hudayberdyyev/crawler/repository/storage"
-	"github.com/Hudayberdyyev/crawler/source/championat"
 	"github.com/Hudayberdyyev/crawler/source/ixbt"
 	"github.com/jackc/pgx"
 	"github.com/minio/minio-go/v7"
@@ -93,12 +92,12 @@ func RunParser(repo *repository.Repository) {
 		//	Image: "",
 		//})
 		// ============================================================
-		fmt.Println("Crawling [championat]")
-		championat.StartParser(repo, models.News{
-			CatID:  0,
-			AuthID: Championat,
-			Image:  "",
-		})
+		//fmt.Println("Crawling [championat]")
+		//championat.StartParser(repo, models.News{
+		//	CatID:  0,
+		//	AuthID: Championat,
+		//	Image:  "",
+		//})
 		// ============================================================
 		fmt.Println("Crawling [ixbt]")
 		ixbt.StartParser(repo, models.News{
