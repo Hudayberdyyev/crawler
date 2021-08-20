@@ -8,7 +8,6 @@ import (
 	"github.com/Hudayberdyyev/crawler/repository/storage"
 	"github.com/Hudayberdyyev/crawler/source/championat"
 	"github.com/Hudayberdyyev/crawler/source/ixbt"
-	"github.com/Hudayberdyyev/crawler/source/rozetked"
 	"github.com/Hudayberdyyev/crawler/source/wylsacom"
 	"github.com/jackc/pgx"
 	"github.com/minio/minio-go/v7"
@@ -81,12 +80,12 @@ func RunParser(repo *repository.Repository) {
 		//	Image:  "",
 		//})
 		// ============================================================
-		fmt.Println("Crawling [rozetked]")
-		rozetked.StartParser(repo, models.News{
-			CatID:  0,
-			AuthID: Rozetked,
-			Image:  "",
-		})
+		//fmt.Println("Crawling [rozetked]")
+		//rozetked.StartParser(repo, models.News{
+		//	CatID:  0,
+		//	AuthID: Rozetked,
+		//	Image:  "",
+		//})
 		// ============================================================
 		fmt.Println("Crawling [wylsacom]")
 		wylsacom.StartParser(repo, models.News{

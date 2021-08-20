@@ -28,17 +28,20 @@ type Categories struct {
 var urlParts [2]string
 var cat []Categories
 
-func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
+func NewsContentParser(repo *repository.Repository, newsText models.NewsText) int {
 	res, err := http.Get(newsText.Url)
 	if err != nil {
 		log.Printf("http get %s error: %v\n", newsText.Url, err)
-		return
+		if strings.Contains(err.Error(), "no such host") {
+			return http.StatusRequestTimeout
+		}
+		return http.StatusGatewayTimeout
 	}
 
 	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		log.Printf("status code error: %d %s\n", res.StatusCode, res.Status)
-		return
+
+	if res.StatusCode == http.StatusNotFound {
+		return http.StatusNotFound
 	}
 
 	// ====================================================================
@@ -47,7 +50,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		log.Printf("load html document error: %v\n", err)
-		return
+		return http.StatusInternalServerError
 	}
 
 	// ====================================================================
@@ -66,7 +69,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 
 	if e != nil {
 		log.Printf("error with create news text %v\n", e)
-		return
+		return http.StatusInternalServerError
 	}
 
 	// ====================================================================
@@ -193,9 +196,10 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) {
 	})
 
 	log.Printf("%s) %s parsed\n", newsText.Hl, newsText.Title)
+	return http.StatusOK
 }
 
-func NewsPageParser(repo *repository.Repository, URL string, latestLink string, newsInfo models.News ) int {
+func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.News ) (int, string) {
 	// ====================================================================
 	// http get URL
 	// ====================================================================
@@ -203,14 +207,16 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 
 	if err != nil {
 		log.Printf("http.Get(URL) error: %v\n", err)
-		return http.StatusBadRequest
+		if strings.Contains(err.Error(), "no such host"){
+			return http.StatusRequestTimeout, "error"
+		}
+		return http.StatusGatewayTimeout, "error"
 	}
 
 	defer res.Body.Close()
 
-	if res.StatusCode != 200 {
-		log.Printf("Status code error: %d %s\n", res.StatusCode, res.Status)
-		return http.StatusBadRequest
+	if res.StatusCode == http.StatusNotFound {
+		return http.StatusNotFound, "error"
 	}
 
 	// ====================================================================
@@ -219,16 +225,15 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		log.Printf("Error load html document: %v\n", err)
-		return http.StatusBadRequest
+		return http.StatusInternalServerError, "error"
 	}
 	// ====================================================================
 	// news list parse
 	// ====================================================================
-	var result []string
-	var ids	   []int
 
 	fmt.Println(URL)
 	sel := doc.Find("div#content > div#primary > main#main > section.postsGrid").Children().Filter("div.postCard")
+	var lastLink string
 	for i := range sel.Nodes {
 		s := sel.Eq(i)
 		// ====================================================================
@@ -239,14 +244,14 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// image
 		// ====================================================================
 		imageLink, ok := s.Find("figure").Attr("style")
-		entryPos := strings.Index(imageLink, "https://")
-		imageLink = imageLink[entryPos:]
-		imageLink = imageLink[:len(imageLink)-1]
 
 		if !ok {
 			log.Printf("No news images\n")
 			continue
 		}
+		entryPos := strings.Index(imageLink, "https://")
+		imageLink = imageLink[entryPos:]
+		imageLink = imageLink[:len(imageLink)-1]
 		newsInfo.Image=imageLink
 
 		// ====================================================================
@@ -310,9 +315,12 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 		// ====================================================================
 		// checking a new article
 		// ====================================================================
-		if link == latestLink {
-			fmt.Println("everything up to date !")
-			return http.StatusNotModified
+		lastLink = link
+
+		_, err = repo.Database.GetNewsIdByUrl(link)
+		if err == nil {
+			log.Printf("%s link already has in database\n", link)
+			continue
 		}
 
 		// ====================================================================
@@ -361,26 +369,18 @@ func NewsPageParser(repo *repository.Repository, URL string, latestLink string, 
 			log.Printf("error with upload image: %v\n", uploadErr)
 		}
 
-		// ====================================================================
-		// add ids and links articles to slices
-		// ====================================================================
-		ids = append(ids, newsId)
-		result = append(result, link)
+		statusCode := http.StatusRequestTimeout
+		for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
+			statusCode = NewsContentParser(repo, models.NewsText{
+				NewsID: newsId,
+				Hl:     ru,
+				Title:  "",
+				Url:    link,
+			})
+		}
 	}
 
-	// ====================================================================
-	// iterate articles (tm, ru)
-	// ====================================================================
-	for index, link := range result {
-		NewsContentParser(repo, models.NewsText{
-			NewsID: ids[index],
-			Hl:     ru,
-			Title:  "",
-			Url:    link,
-		})
-	}
-
-	return http.StatusOK
+	return http.StatusOK, lastLink
 }
 
 func StartParser(repo *repository.Repository, newsInfo models.News) {
@@ -393,29 +393,32 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 	urlParts[0] = "https://wylsa.com/category/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
+		lastLink := ""
+		prevLastLink := ""
 		for indexPage := 1; ; indexPage++ {
 			// ====================================================================
 			// make URL
 			// ====================================================================
 			newsUrl := urlParts[0] + urlParts[1] + "/page/" + strconv.Itoa(indexPage)
 
-			newsId, err := repo.Database.GetLatestNewsIdByAuthorAndCategory(cat[i].id, newsInfo.AuthID)
-			if err != nil {
-				log.Printf("error with get latest news id: %v", err)
+			statusCode := http.StatusRequestTimeout
+			for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
+				statusCode, lastLink = NewsPageParser(repo, newsUrl, models.News{
+					CatID:  cat[i].id,
+					AuthID: newsInfo.AuthID,
+					Image:  "",
+				})
 			}
 
-			latestLink, err := repo.Database.GetLatestNewsUrlByNewsId(newsId)
-			if err != nil {
-				log.Printf("error with get latest new url: %v", err)
+			// =========================================================
+			// if lastLink equal to prevLastLink then we got a end of news for this category
+			// =========================================================
+			if lastLink == prevLastLink {
+				break
 			}
+			prevLastLink = lastLink
 
-			statusCode := NewsPageParser(repo, newsUrl, latestLink, models.News{
-				CatID:  cat[i].id,
-				AuthID: newsInfo.AuthID,
-				Image:  "",
-			})
-
-			if statusCode == http.StatusNotModified || statusCode == http.StatusBadRequest{
+			if statusCode == http.StatusNotFound {
 				break
 			}
 		}
