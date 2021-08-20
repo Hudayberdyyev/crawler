@@ -1,14 +1,12 @@
 package TurkmenPortal
 
 import (
-	"context"
 	"fmt"
 	"github.com/Hudayberdyyev/crawler/models"
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/PuerkitoBio/goquery"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -22,7 +20,14 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 
 	if err != nil {
 		log.Printf("http.Get(URL) error: %v\n", err)
-		return res.StatusCode, ""
+		if strings.Contains(err.Error(), "no such host"){
+			return http.StatusRequestTimeout, ""
+		}
+		return http.StatusGatewayTimeout, ""
+	}
+
+	if res.StatusCode == http.StatusNotFound {
+		return http.StatusNotFound, ""
 	}
 
 	defer res.Body.Close()
@@ -39,7 +44,6 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 	// news list parse
 	// ====================================================================
 	var result []string
-	var ids	   []int
 	var lastLink string
 
 	sel := doc.Find("div#yw3 > div.items").Children()
@@ -93,37 +97,22 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 		_, err = repo.Database.GetNewsIdByUrl(link)
 		if err == nil {
 			lastLink = link
+			log.Printf("%s link already has in database\n", link)
 			continue
-		}
-
-		//	article to db
-		// ====================================================================
-		newsId, e := repo.Database.CreateNews(newsInfo)
-		if e != nil {
-			log.Printf("Error with create news: %v\n", e)
-			continue
-		}
-
-		// image article to storage
-		// ====================================================================
-		uploadErr := repo.Storage.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
-		if uploadErr != nil {
-			log.Printf("error with upload image: %v\n", uploadErr)
 		}
 
 		// add ids and links articles to slices
 		// ====================================================================
-		ids = append(ids, newsId)
 		result = append(result, link)
 		lastLink = link
 	}
 	// iterate articles (tm, ru)
 	// ====================================================================
-	for index, link := range result {
+	for _, link := range result {
 		statusCode := http.StatusRequestTimeout
 		for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
-			statusCode = NewsContentParser(repo, models.NewsText{
-				NewsID: ids[index],
+			statusCode = NewsContentParser(repo, newsInfo, models.NewsText{
+				NewsID: 0,
 				Hl:     ru,
 				Title:  "",
 				Url:    link,
@@ -131,8 +120,8 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 		}
 		statusCode  = http.StatusRequestTimeout
 		for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
-			statusCode = NewsContentParser(repo, models.NewsText{
-				NewsID: ids[index],
+			statusCode = NewsContentParser(repo, newsInfo, models.NewsText{
+				NewsID: 0,
 				Hl:     tm,
 				Title:  "",
 				Url:    link,

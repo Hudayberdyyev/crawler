@@ -11,10 +11,11 @@ import (
 	"strings"
 )
 
-func NewsContentParser(repo *repository.Repository, newsText models.NewsText) (int){
+func NewsContentParser(repo *repository.Repository, newsInfo models.News, newsText models.NewsText) (int){
 	// ====================================================================
 	// collect URL
 	// ====================================================================
+	origUrl := newsText.Url
 	URL := newsText.Url
 
 	hl := ""
@@ -31,13 +32,40 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) (i
 	res, err := http.Get(URL)
 	if err != nil {
 		log.Printf("http get %s error: %v\n", URL, err)
-		return
+		if strings.Contains(err.Error(), "no such host") {
+			return http.StatusRequestTimeout
+		}
+		return http.StatusGatewayTimeout
 	}
 
 	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		log.Printf("status code error: %d %s\n", res.StatusCode, res.Status)
-		return
+
+	if res.StatusCode == http.StatusNotFound {
+		return http.StatusNotFound
+	}
+
+	if newsText.Hl != tm {
+		//	article to db
+		// ====================================================================
+		newsId, e := repo.Database.CreateNews(newsInfo)
+		if e != nil {
+			log.Printf("Error with create news: %v\n", e)
+		}
+
+		// image article to storage
+		// ====================================================================
+		uploadErr := repo.Storage.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
+		if uploadErr != nil {
+			log.Printf("error with upload image: %v\n", uploadErr)
+		}
+		newsText.NewsID = newsId
+	} else {
+		newsId, e := repo.Database.GetNewsIdByUrl(origUrl)
+		if e != nil {
+			log.Printf("error with get newsId by url: %v\n", e)
+			return http.StatusInternalServerError
+		}
+		newsText.NewsID = newsId
 	}
 
 	// ====================================================================
@@ -46,7 +74,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) (i
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		log.Printf("load html document error: %v\n", err)
-		return
+		return http.StatusInternalServerError
 	}
 
 	// ====================================================================
@@ -65,7 +93,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) (i
 
 	if e != nil {
 		log.Printf("error with create news text %v\n", e)
-		return
+		return http.StatusInternalServerError
 	}
 
 	// ====================================================================
@@ -100,7 +128,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) (i
 				} else {
 					// make attribute
 					attr = strings.Trim(attr, " ")
-					attr = "https://turkmenportal.com" + attr
+					if !strings.Contains(attr, "https") { attr = "https://turkmenportal.com" + attr }
 
 					// make NewsContent
 					newsContent := models.NewsContent{
@@ -179,4 +207,5 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) (i
 	})
 
 	log.Printf("%s) %s parsed\n", newsText.Hl, newsText.Title)
+	return http.StatusOK
 }
