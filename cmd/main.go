@@ -6,10 +6,15 @@ import (
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/Hudayberdyyev/crawler/repository/postgres"
 	"github.com/Hudayberdyyev/crawler/repository/storage"
+	"github.com/Hudayberdyyev/crawler/source/TurkmenPortal"
+	"github.com/Hudayberdyyev/crawler/source/championat"
 	"github.com/Hudayberdyyev/crawler/source/ixbt"
+	"github.com/Hudayberdyyev/crawler/source/rozetked"
+	"github.com/Hudayberdyyev/crawler/source/wylsacom"
 	"github.com/jackc/pgx"
 	"github.com/minio/minio-go/v7"
 	"log"
+	"os"
 )
 
 const (
@@ -71,40 +76,52 @@ func initMinio(config storage.Config) (*minio.Client, error) {
 }
 
 func RunParser(repo *repository.Repository) {
-		//fmt.Println("Crawling [turkmenportal]")
-		//TurkmenPortal.ParseTurkmenPortal(repo, models.News{
-		//	CatID:  0,
-		//	AuthID: TurkmenPortalID,
-		//	Image:  "",
-		//})
+		src := os.Getenv("SOURCE")
+		fmt.Println(src)
+		if src == "turkmenportal" {
+			fmt.Println("Crawling [turkmenportal]")
+			TurkmenPortal.ParseTurkmenPortal(repo, models.News{
+				CatID:  0,
+				AuthID: TurkmenPortalID,
+				Image:  "",
+			})
+		}
 		// ============================================================
-		//fmt.Println("Crawling [rozetked]")
-		//rozetked.StartParser(repo, models.News{
-		//	CatID:  0,
-		//	AuthID: Rozetked,
-		//	Image:  "",
-		//})
+		if src == "rozetked" {
+			fmt.Println("Crawling [rozetked]")
+			rozetked.StartParser(repo, models.News{
+				CatID:  0,
+				AuthID: Rozetked,
+				Image:  "",
+			})
+		}
 		// ============================================================
-		//fmt.Println("Crawling [wylsacom]")
-		//wylsacom.StartParser(repo, models.News{
-		//	CatID: 0,
-		//	AuthID: Wylsacom,
-		//	Image: "",
-		//})
+		if src == "wylsacom" {
+			fmt.Println("Crawling [wylsacom]")
+			wylsacom.StartParser(repo, models.News{
+				CatID: 0,
+				AuthID: Wylsacom,
+				Image: "",
+			})
+		}
 		// ============================================================
-		//fmt.Println("Crawling [championat]")
-		//championat.StartParser(repo, models.News{
-		//	CatID:  0,
-		//	AuthID: Championat,
-		//	Image:  "",
-		//})
+		if src == "championat" {
+			fmt.Println("Crawling [championat]")
+			championat.StartParser(repo, models.News{
+				CatID:  0,
+				AuthID: Championat,
+				Image:  "",
+			})
+		}
 		// ============================================================
-		fmt.Println("Crawling [ixbt]")
-		ixbt.StartParser(repo, models.News{
-			CatID: 0,
-			AuthID: IXBT,
-			Image: "",
-		})
+		if src == "ixbt" {
+			fmt.Println("Crawling [ixbt]")
+			ixbt.StartParser(repo, models.News{
+				CatID:  0,
+				AuthID: IXBT,
+				Image:  "",
+			})
+		}
 		// ============================================================
 		fmt.Println("everything up to date !!!")
 }
