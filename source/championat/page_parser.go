@@ -87,7 +87,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 				log.Printf("No news link\n")
 				continue
 			}
-			if strings.Contains(link, "http") {
+			if strings.Contains(link, "http") || link[0] != 47{
 				continue
 			}
 			link = "https://championat.com" + link
