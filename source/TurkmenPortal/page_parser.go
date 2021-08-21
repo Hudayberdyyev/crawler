@@ -64,7 +64,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 			continue
 		}
 
-		if strings.Contains(imageLink, "https") {
+		if strings.Contains(imageLink, "http") {
 			newsInfo.Image = imageLink
 		} else {
 			newsInfo.Image="https://turkmenportal.com" + imageLink
