@@ -287,7 +287,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 			log.Printf("No news images\n")
 			continue
 		}
-		if strings.Contains(imageLink, "https") {
+		if strings.Contains(imageLink, "http") {
 			newsInfo.Image = imageLink
 		} else {
 			newsInfo.Image = "https://rozetked.me" + imageLink
