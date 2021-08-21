@@ -64,7 +64,12 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 				log.Printf("impossible month name: %s\n", strings.ToLower(splitPostDate[1]))
 				continue
 			}
-
+			if len(postDay) < 2 {
+				postDay = "0" + postDay
+			}
+			if len(postMonth) < 2 {
+				postMonth = "0" + postMonth
+			}
 			postDate = postDay + "." + postMonth + "." + postYear
 			continue
 		}
@@ -98,7 +103,16 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 			// ====================================================================
 			metaSel := s.Find("div.news-item__time")
 			publishTimeStr := strings.Trim(metaSel.Text(), " \n\t\r") + ":00"
-
+			splitTime := strings.Split(publishTimeStr, ":")
+			if cap(splitTime) > 1 {
+				if len(splitTime[0]) < 2 {
+					splitTime[0] = "0" + splitTime[0]
+				}
+				if len(splitTime[1]) < 2 {
+					splitTime[1] = "0" + splitTime[1]
+				}
+				publishTimeStr = strings.Join(splitTime, ":")
+			}
 			publishDateStr := publishTimeStr + " " + postDate + " +03:00"
 
 			publishDate, err := time.Parse(layoutDateTime, publishDateStr)
