@@ -97,7 +97,9 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) in
 
 					// make attribute
 					attr = strings.Trim(attr, " ")
-					attr = "https://www.ixbt.com" + attr
+					if !strings.Contains(attr, "http") {
+						attr = "https://www.ixbt.com" + attr
+					}
 					// ====================================================================
 					// if this is first image then update NewsImage
 					// ====================================================================
