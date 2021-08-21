@@ -250,9 +250,11 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 			continue
 		}
 		entryPos := strings.Index(imageLink, "https://")
-		imageLink = imageLink[entryPos:]
-		imageLink = imageLink[:len(imageLink)-1]
-		newsInfo.Image=imageLink
+		if entryPos > -1 {
+			imageLink = imageLink[entryPos:]
+			imageLink = imageLink[:len(imageLink)-1]
+			newsInfo.Image = imageLink
+		}
 
 		// ====================================================================
 		// link
