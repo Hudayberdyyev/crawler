@@ -42,8 +42,6 @@ func ParseTurkmenPortal(repo *repository.Repository, newsInfo models.News) {
 			urlParts[0] = "https://turkmenportal.com/blog/a/index?path=novosti%2F"
 			urlParts[2] = "&Blog_sort=date_added.desc&page="
 		}
-		lastLink := ""
-		prevLastLink := ""
 		for indexPage := 1; ; indexPage++ {
 			urlParts[1] = Categories[i]
 			newUrl := urlParts[0] + urlParts[1] + urlParts[2] + strconv.Itoa(indexPage)
@@ -53,7 +51,7 @@ func ParseTurkmenPortal(repo *repository.Repository, newsInfo models.News) {
 			// =========================================================
 			statusCode := http.StatusRequestTimeout
 			for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
-				statusCode, lastLink = NewsPageParser(repo, newUrl, models.News{
+				statusCode = NewsPageParser(repo, newUrl, models.News{
 					CatID:  i + 1,
 					AuthID: newsInfo.AuthID,
 					Image:  "",
@@ -62,12 +60,8 @@ func ParseTurkmenPortal(repo *repository.Repository, newsInfo models.News) {
 			// =========================================================
 			// if lastLink equal to prevLastLink then we got a end of news for this category
 			// =========================================================
-			if lastLink == prevLastLink {
-				break
-			}
-			prevLastLink = lastLink
 
-			if statusCode == http.StatusNotFound {
+			if statusCode == http.StatusNotFound || statusCode == http.StatusNotModified {
 				break
 			}
 		}

@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.News ) (int, string) {
+func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.News ) (int) {
 	// ====================================================================
 	// http get URL
 	// ====================================================================
@@ -21,13 +21,13 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 	if err != nil {
 		log.Printf("http.Get(URL) error: %v\n", err)
 		if strings.Contains(err.Error(), "no such host"){
-			return http.StatusRequestTimeout, "error"
+			return http.StatusRequestTimeout
 		}
-		return http.StatusGatewayTimeout, "error"
+		return http.StatusGatewayTimeout
 	}
 
 	if res.StatusCode == http.StatusNotFound {
-		return http.StatusNotFound, "error"
+		return http.StatusNotFound
 	}
 
 	defer res.Body.Close()
@@ -38,13 +38,11 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		log.Printf("Error load html document: %v\n", err)
-		return http.StatusInternalServerError, "error"
+		return http.StatusInternalServerError
 	}
 
 	// news list parse
 	// ====================================================================
-	var result []string
-	var lastLink string
 
 	sel := doc.Find("div#yw3 > div.items").Children()
 	for i := range sel.Nodes {
@@ -96,19 +94,12 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 		// ===================================================================
 		_, err = repo.Database.GetNewsIdByUrl(link)
 		if err == nil {
-			lastLink = link
 			log.Printf("%s link already has in database\n", link)
-			continue
+			return http.StatusNotModified
 		}
 
-		// add ids and links articles to slices
+		// parsing ru version of news
 		// ====================================================================
-		result = append(result, link)
-		lastLink = link
-	}
-	// iterate articles (tm, ru)
-	// ====================================================================
-	for _, link := range result {
 		statusCode := http.StatusRequestTimeout
 		for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
 			statusCode = NewsContentParser(repo, newsInfo, models.NewsText{
@@ -118,6 +109,8 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 				Url:    link,
 			})
 		}
+		// parsing tm version of news
+		// ====================================================================
 		statusCode  = http.StatusRequestTimeout
 		for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
 			statusCode = NewsContentParser(repo, newsInfo, models.NewsText{
@@ -129,5 +122,5 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 		}
 	}
 
-	return http.StatusOK, lastLink
+	return http.StatusOK
 }
