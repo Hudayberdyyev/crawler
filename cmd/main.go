@@ -6,8 +6,11 @@ import (
 	"github.com/Hudayberdyyev/crawler/repository"
 	"github.com/Hudayberdyyev/crawler/repository/postgres"
 	"github.com/Hudayberdyyev/crawler/repository/storage"
+	"github.com/Hudayberdyyev/crawler/source/TurkmenPortal"
 	"github.com/Hudayberdyyev/crawler/source/championat"
 	"github.com/Hudayberdyyev/crawler/source/ixbt"
+	"github.com/Hudayberdyyev/crawler/source/rozetked"
+	"github.com/Hudayberdyyev/crawler/source/wylsacom"
 	"github.com/jackc/pgx"
 	"github.com/minio/minio-go/v7"
 	"log"
@@ -76,30 +79,31 @@ func RunParser(repo *repository.Repository, second int) {
 	ticker := time.NewTicker(time.Duration(second) * time.Second)
 
 	for _ = range ticker.C {
-		//// start parsing turkmenportal
-		//// ============================================================
-		//fmt.Println("Crawling [turkmenportal]")
-		//TurkmenPortal.ParseTurkmenPortal(repo, models.News{
-		//	CatID:  0,
-		//	AuthID: TurkmenPortalID,
-		//	Image:  "",
-		//})
-		//// start parsing rozetked
-		//// ============================================================
-		//fmt.Println("Crawling [rozetked]")
-		//rozetked.StartParser(repo, models.News{
-		//	CatID:  0,
-		//	AuthID: Rozetked,
-		//	Image:  "",
-		//})
-		//// start parsing wylsacom
-		//// ============================================================
-		//fmt.Println("Crawling [wylsacom]")
-		//wylsacom.StartParser(repo, models.News{
-		//	CatID:  0,
-		//	AuthID: Wylsacom,
-		//	Image:  "",
-		//})
+		// start parsing turkmenportal
+		// ============================================================
+		fmt.Println("Crawling [turkmenportal]")
+		TurkmenPortal.ParseTurkmenPortal(repo, models.News{
+			CatID:  0,
+			AuthID: TurkmenPortalID,
+			Image:  "",
+		})
+		// start parsing rozetked
+		// ============================================================
+		fmt.Println("Crawling [rozetked]")
+		rozetked.StartParser(repo, models.News{
+			CatID:  0,
+			AuthID: Rozetked,
+			Image:  "",
+		})
+		// start parsing wylsacom
+		// ============================================================
+		fmt.Println("Crawling [wylsacom]")
+		wylsacom.StartParser(repo, models.News{
+			CatID:  0,
+			AuthID: Wylsacom,
+			Image:  "",
+		})
+		// start parsing championat
 		// ============================================================
 		fmt.Println("Crawling [championat]")
 		championat.StartParser(repo, models.News{
@@ -107,6 +111,7 @@ func RunParser(repo *repository.Repository, second int) {
 			AuthID: Championat,
 			Image:  "",
 		})
+		
 		// ============================================================
 		fmt.Println("Crawling [ixbt]")
 		ixbt.StartParser(repo, models.News{
