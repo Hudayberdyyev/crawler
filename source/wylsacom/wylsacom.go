@@ -385,7 +385,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 	return http.StatusOK, lastLink
 }
 
-func StartParser(repo *repository.Repository, newsInfo models.News) {
+func  StartParser(repo *repository.Repository, newsInfo models.News) {
 	cat, err := getCategories(repo)
 	if err != nil {
 		log.Printf("error with get category id: %v\n", err)
@@ -395,8 +395,6 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 	urlParts[0] = "https://wylsa.com/category/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
-		lastLink := ""
-		prevLastLink := ""
 		for indexPage := 1; ; indexPage++ {
 			// ====================================================================
 			// make URL
@@ -405,22 +403,14 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 
 			statusCode := http.StatusRequestTimeout
 			for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
-				statusCode, lastLink = NewsPageParser(repo, newsUrl, models.News{
+				statusCode = NewsPageParser(repo, newsUrl, models.News{
 					CatID:  cat[i].id,
 					AuthID: newsInfo.AuthID,
 					Image:  "",
 				})
 			}
 
-			// =========================================================
-			// if lastLink equal to prevLastLink then we got a end of news for this category
-			// =========================================================
-			if lastLink == prevLastLink {
-				break
-			}
-			prevLastLink = lastLink
-
-			if statusCode == http.StatusNotFound {
+			if statusCode == http.StatusNotFound || statusCode == http.StatusNotModified {
 				break
 			}
 		}
