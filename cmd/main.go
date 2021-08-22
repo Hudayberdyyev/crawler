@@ -79,6 +79,7 @@ func RunParser(repo *repository.Repository, second int) {
 	ticker := time.NewTicker(time.Duration(second) * time.Second)
 
 	for _ = range ticker.C {
+		// start parsing turkmenportal
 		// ============================================================
 		fmt.Println("Crawling [turkmenportal]")
 		TurkmenPortal.ParseTurkmenPortal(repo, models.News{
