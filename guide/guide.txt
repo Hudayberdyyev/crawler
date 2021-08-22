@@ -1,0 +1,21 @@
+for Deploy on server run following commands:
+
+before starting docker compose we must create database (if it doesn't exist):
+
+    rm -r /var/lib/docker/data/
+    mkdir /var/lib/docker/data/
+    mkdir /var/lib/docker/data/database
+    mkdir /var/lib/docker/data/storage
+
+    docker run --name=test-db -v /var/lib/docker/data/database:/var/lib/postgresql/data -e POSTGRES_PASSWORD='qwerty' -p 5432:5432 -d --rm postgres:13.3
+    psql postgres -h 127.0.0.1 -d postgres -f /root/crawler/repository/postgres/migrations/000001_init.up.sql
+    psql postgres -h 127.0.0.1 -d postgres -f /root/crawler/repository/postgres/seeds.sql
+    docker stop test-db
+
+then running docker compose:
+
+    rm -r /root/crawler
+    git clone https://github.com/Hudayberdyyev/crawler.git
+    cd crawler
+    git checkout UpdChecker
+    docker-compose up
