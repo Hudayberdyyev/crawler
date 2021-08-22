@@ -29,47 +29,9 @@ services:
       - /var/lib/docker/data/storage:/data
     command: server /data
 
-  turkmenportal:
+  parser:
     build: ./
     restart: on-failure
-    environment:
-      - SOURCE=turkmenportal
-    depends_on:
-      - postgresql
-      - minio
-
-  wylsacom:
-    build: ./
-    restart: on-failure
-    environment:
-      - SOURCE=wylsacom
-    depends_on:
-      - postgresql
-      - minio
-
-  rozetked:
-    build: ./
-    restart: on-failure
-    environment:
-      - SOURCE=rozetked
-    depends_on:
-      - postgresql
-      - minio
-
-  ixbt:
-    build: ./
-    restart: on-failure
-    environment:
-      - SOURCE=ixbt
-    depends_on:
-      - postgresql
-      - minio
-
-  championat:
-    build: ./
-    restart: on-failure
-    environment:
-      - SOURCE=championat
     depends_on:
       - postgresql
       - minio
