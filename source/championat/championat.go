@@ -33,8 +33,6 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 	urlParts[0] = "https://championat.com/"
 	for i := 0; i < categoryCount; i++ {
 		urlParts[1] = cat[i].link
-		lastLink := ""
-		prevLastLink := ""
 		for indexPage := 1; ; indexPage++ {
 			// ====================================================================
 			// make URL
@@ -43,22 +41,14 @@ func StartParser(repo *repository.Repository, newsInfo models.News) {
 
 			statusCode := http.StatusRequestTimeout
 			for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
-				statusCode, lastLink = NewsPageParser(repo, newsUrl, models.News{
+				statusCode = NewsPageParser(repo, newsUrl, models.News{
 					CatID:  cat[i].id,
 					AuthID: newsInfo.AuthID,
 					Image:  "",
 				})
 			}
 
-			// =========================================================
-			// if lastLink equal to prevLastLink then we got a end of news for this category
-			// =========================================================
-			if lastLink == prevLastLink {
-				break
-			}
-			prevLastLink = lastLink
-
-			if statusCode == http.StatusNotFound {
+			if statusCode == http.StatusNotFound || statusCode == http.StatusNotModified {
 				break
 			}
 		}
