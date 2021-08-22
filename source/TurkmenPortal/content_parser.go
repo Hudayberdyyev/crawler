@@ -128,7 +128,7 @@ func NewsContentParser(repo *repository.Repository, newsInfo models.News, newsTe
 				} else {
 					// make attribute
 					attr = strings.Trim(attr, " ")
-					if !strings.Contains(attr, "https") { attr = "https://turkmenportal.com" + attr }
+					if !strings.Contains(attr, "http") { attr = "https://turkmenportal.com" + attr }
 
 					// make NewsContent
 					newsContent := models.NewsContent{

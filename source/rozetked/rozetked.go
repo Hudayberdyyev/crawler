@@ -143,7 +143,7 @@ func NewsContentParser(repo *repository.Repository, newsText models.NewsText) in
 					// ====================================================================
 					// if link not contains https then, add prefix https://rozetked.me
 					// ====================================================================
-					if !strings.Contains(attr, "https") {
+					if !strings.Contains(attr, "http") {
 						attr = "https://rozetked.me" + attr
 					}
 
