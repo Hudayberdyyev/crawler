@@ -30,7 +30,7 @@ func main() {
 	fmt.Println("crawler is starting ... ")
 
 	db, err := initDB(postgres.Config{
-		Host:     "db",
+		Host:     "localhost",
 		Username: "postgres",
 		Password: "qwerty",
 		Port:     5432,
@@ -45,7 +45,7 @@ func main() {
 	defer db.Close()
 
 	minioClient, err := initMinio(storage.Config{
-		Endpoint:       "storage" + ":9000",
+		Endpoint:       "localhost" + ":9000",
 		AccessKeyId:    "AHMET",
 		SecretAccesKey: "Ah25101996!",
 		UseSSL:         false,
