@@ -320,7 +320,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 
 		_, err = repo.Database.GetNewsIdByUrl(link)
 		if err == nil {
-			log.Printf("%s link already has in database\n", link)
+			//log.Printf("%s link already has in database\n", link)
 			return http.StatusNotModified
 		}
 
