@@ -313,6 +313,9 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 			log.Printf("error with parse date: %v\n", err)
 		}
 		newsInfo.PublishDate = publishDate
+		if publishDate.Year() < 2020 {
+			return http.StatusNotFound, "very_old"
+		}
 
 		// ====================================================================
 		// checking a new article
