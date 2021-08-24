@@ -36,7 +36,9 @@ CREATE  TABLE IF NOT EXISTS news (
                                 publish_date         timestamp NOT NULL ,
                                 view_count           integer DEFAULT 0 NOT NULL ,
                                 open_count           integer DEFAULT 0 NOT NULL ,
-                                big                  smallint DEFAULT 0 NOT NULL
+                                big                  smallint DEFAULT 0 NOT NULL ,
+                                status               integer DEFAULT 0 NOT NULL ,
+                                last_upd             integer  DEFAULT 0 NOT NULL
 );
 
 CREATE  TABLE IF NOT EXISTS news_text (
