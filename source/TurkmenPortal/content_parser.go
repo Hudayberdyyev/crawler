@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func NewsContentParser(repo *repository.Repository, newsInfo models.News, newsText models.NewsText) (int){
+func NewsContentParser(repo *repository.Repository, newsInfo models.News, firstNewsId *int, newsText models.NewsText) (int){
 	// ====================================================================
 	// collect URL
 	// ====================================================================
@@ -51,7 +51,10 @@ func NewsContentParser(repo *repository.Repository, newsInfo models.News, newsTe
 		if e != nil {
 			log.Printf("Error with create news: %v\n", e)
 		}
-
+		// ===================================================================
+		// if firstNewsId don't set then set firstNewsId to newsId this news
+		// ===================================================================
+		if *firstNewsId == 0 { *firstNewsId = newsId }
 		// image article to storage
 		// ====================================================================
 		uploadErr := repo.Storage.UploadImage(context.Background(), "news", newsInfo.Image, strconv.Itoa(newsId))
