@@ -215,3 +215,14 @@ func (n *NewsDatabase) SetLastUpdStatus(newsId, value int) error {
 	if err != nil { return err }
 	return nil
 }
+
+func (n *NewsDatabase) GetLastUpdStatus(newsId int) (int, error) {
+	var lastUpdStatus int
+	query := fmt.Sprintf("select last_upd from %s where id=$1", newsTable)
+	err := n.db.QueryRow(query, newsId).Scan(&lastUpdStatus)
+	if err != nil {
+		return 0, err
+	}
+	return lastUpdStatus, nil
+
+}

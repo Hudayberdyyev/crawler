@@ -23,6 +23,7 @@ type Database interface {
 	GetNewsIdByUrl(url string) (int, error)
 	GetLinkLatestSuccessNewsByAuthorAndCategory (catId, authId int) (int, error)
 	SetLastUpdStatus(newsId, value int) error
+	GetLastUpdStatus(newsId int) (int, error)
 }
 
 type Storage interface {
