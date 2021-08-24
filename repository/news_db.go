@@ -188,3 +188,30 @@ func (n *NewsDatabase) GetNewsIdByUrl(url string) (int, error) {
 	}
 	return id, nil
 }
+
+func (n *NewsDatabase) GetLinkLatestSuccessNewsByAuthorAndCategory (catId, authId int) (int, error) {
+	var id int
+	query := fmt.Sprintf("select id from %s where category_id=$1 and author_id=$2 and last_upd=1 order by publish_date desc limit 1", newsTable)
+	err := n.db.QueryRow(query, catId, authId).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func (n *NewsDatabase) SetLastUpdStatus(newsId, value int) error {
+	tx, err := n.db.Begin()
+	if err != nil {
+		log.Printf("error with start db transaction: %s\n", err.Error())
+		return err
+	}
+	defer tx.Rollback()
+	query := fmt.Sprintf("update %s set last_upd = $1 where id = $2", newsTable)
+	_, err = tx.Exec(query, value, newsId)
+	if err != nil {
+		return err
+	}
+	err = tx.Commit()
+	if err != nil { return err }
+	return nil
+}

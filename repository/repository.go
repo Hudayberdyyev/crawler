@@ -21,6 +21,8 @@ type Database interface {
 	UpdateNewsImageById(newsId int, imageLink string) (error)
 	UpdateTagByContentId(contentId int, tagName string) (error)
 	GetNewsIdByUrl(url string) (int, error)
+	GetLinkLatestSuccessNewsByAuthorAndCategory (catId, authId int) (int, error)
+	SetLastUpdStatus(newsId, value int) error
 }
 
 type Storage interface {
