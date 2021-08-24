@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.News ) (int) {
+func NewsPageParser(repo *repository.Repository, URL string, firstNewsId *int, newsInfo models.News ) (int) {
 	// ====================================================================
 	// http get URL
 	// ====================================================================
@@ -41,6 +41,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 		return http.StatusInternalServerError
 	}
 
+	// ====================================================================
 	// news list parse
 	// ====================================================================
 
@@ -90,19 +91,42 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 		}
 		newsInfo.PublishDate = publishDate
 
+		// ===================================================================
 		// checking a new article
 		// ===================================================================
-		_, err = repo.Database.GetNewsIdByUrl(link)
+		checkId, err := repo.Database.GetNewsIdByUrl(link)
 		if err == nil {
+			// ===================================================================
+			// if we don't set firstNewsId then setting firstNewsIf
+			// for know at where the next time we started
+			// ===================================================================
+			if *firstNewsId == 0 { *firstNewsId = checkId }
 			// log.Printf("%s link already has in database\n", link)
-			return http.StatusNotModified
+			// ===================================================================
+			// get lastUpdStatus for this news
+			// ===================================================================
+			lastUpdStatus, err := repo.Database.GetLastUpdStatus(checkId)
+			if err != nil {
+				log.Printf("error with get lastUpdStatus for newsId(%d): %s\n", checkId, err.Error())
+			}
+			// ===================================================================
+			// if status equal 1 then set statusValue to 0, and return this func with NotModified status
+			// ===================================================================
+			if lastUpdStatus == 1 {
+				err = repo.Database.SetLastUpdStatus(checkId, 0)
+				if err != nil {
+					log.Printf("error with set lastUpdStatus for newsId(%d): %s\n", checkId, err.Error())
+				}
+				return http.StatusNotModified
+			}
+			continue
 		}
 
 		// parsing ru version of news
 		// ====================================================================
 		statusCode := http.StatusRequestTimeout
 		for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
-			statusCode = NewsContentParser(repo, newsInfo, models.NewsText{
+			statusCode = NewsContentParser(repo, newsInfo, firstNewsId, models.NewsText{
 				NewsID: 0,
 				Hl:     ru,
 				Title:  "",
@@ -113,7 +137,7 @@ func NewsPageParser(repo *repository.Repository, URL string, newsInfo models.New
 		// ====================================================================
 		statusCode  = http.StatusRequestTimeout
 		for statusCode == http.StatusRequestTimeout || statusCode == http.StatusGatewayTimeout {
-			statusCode = NewsContentParser(repo, newsInfo, models.NewsText{
+			statusCode = NewsContentParser(repo, newsInfo, firstNewsId, models.NewsText{
 				NewsID: 0,
 				Hl:     tm,
 				Title:  "",
